@@ -1,0 +1,9 @@
+StopID,Address,TimeWindow,Pallets,Special
+1,"123 Peach St, Atlanta, GA","08:00-12:00",6,"Fragile"
+2,"789 Oak Ave, Augusta, GA","09:00-15:00",8,"Refrigerated"
+3,"312 River Rd, Macon, GA","10:00-18:00",3,"None"
+4,"456 Main St, Columbus, GA","07:30-11:00",5,"Frozen"
+5,"987 Industrial Blvd, Savannah, GA","13:00-17:00",4,"None"
+6,"654 Commerce Way, Albany, GA","08:30-14:00",7,"Heavy"
+7,"321 Market St, Athens, GA","11:00-16:00",2,"Fragile"
+8,"159 Logistics Ln, Valdosta, GA","09:00-13:00",6,"Refrigerated"

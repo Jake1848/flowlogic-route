@@ -1,0 +1,53 @@
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Database
+sqlalchemy==2.0.23
+alembic==1.13.1
+psycopg2-binary==2.9.9
+asyncpg==0.29.0
+
+# Firebase Auth
+firebase-admin==6.2.0
+google-cloud-firestore==2.13.1
+
+# Stripe billing
+stripe==7.8.0
+
+# Redis for rate limiting and caching
+redis==5.0.1
+python-redis-lock==4.0.0
+
+# API key generation and validation
+cryptography==41.0.8
+secrets==1.0.0
+
+# Environment and configuration
+python-dotenv==1.0.0
+pydantic[email]==2.5.0
+pydantic-settings==2.1.0
+
+# Monitoring and logging
+structlog==23.2.0
+prometheus-client==0.19.0
+
+# HTTP requests
+httpx==0.25.2
+requests==2.31.0
+
+# Date/time handling
+python-dateutil==2.8.2
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx==0.25.2
+
+# Development
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0

@@ -1,0 +1,5 @@
+TruckID,Depot,MaxPallets,Type,ShiftStart,ShiftEnd
+A,"999 Warehouse Way, Atlanta, GA",10,"Dry",07:00,15:00
+B,"999 Warehouse Way, Atlanta, GA",8,"Refrigerated",08:00,16:00
+C,"999 Warehouse Way, Atlanta, GA",12,"Flatbed",06:00,14:00
+D,"500 Distribution Dr, Macon, GA",9,"Frozen",07:30,15:30

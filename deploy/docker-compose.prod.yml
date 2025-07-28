@@ -1,0 +1,168 @@
+# Production Docker Compose Override
+# Use with: docker-compose -f docker-compose.yml -f deploy/docker-compose.prod.yml up -d
+
+version: '3.8'
+
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-flowlogic_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-flowlogic_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./deploy/postgres-prod.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  redis:
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    volumes:
+      - redis_prod_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+
+  api:
+    environment:
+      ENVIRONMENT: production
+      LOG_LEVEL: INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+      - /etc/ssl/certs:/etc/ssl/certs:ro
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health", "&&", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Production reverse proxy with SSL
+  traefik:
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - ACME_EMAIL=${ACME_EMAIL}
+    command:
+      - "--api.insecure=false"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    labels:
+      - "traefik.http.routers.api.rule=Host(`${API_DOMAIN}`) && (PathPrefix(`/route`))"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.saas-api.rule=Host(`${API_DOMAIN}`) && !PathPrefix(`/route`)"
+      - "traefik.http.routers.saas-api.entrypoints=websecure"
+      - "traefik.http.routers.saas-api.tls.certresolver=letsencrypt"
+
+  # Production backup service
+  backup:
+    environment:
+      BACKUP_RETENTION_DAYS: 30
+      S3_BACKUP_BUCKET: ${S3_BACKUP_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    volumes:
+      - ./backups:/backups
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+
+  # Log aggregation
+  fluentd:
+    image: fluent/fluentd:latest
+    container_name: flowlogic_fluentd
+    volumes:
+      - ./logs:/fluentd/log
+      - ./deploy/fluentd.conf:/fluentd/etc/fluent.conf
+    networks:
+      - flowlogic-network
+    profiles:
+      - logging
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: flowlogic_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - flowlogic-network
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: flowlogic_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - flowlogic-network
+    profiles:
+      - monitoring
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  flowlogic-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

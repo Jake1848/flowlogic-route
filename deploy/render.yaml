@@ -1,0 +1,87 @@
+# Render.com Deployment Configuration for FlowLogic RouteAI
+# Place this file at the root of your repository
+# Visit https://render.com to deploy
+
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: flowlogic-postgres
+    plan: starter
+    databaseName: flowlogic
+    user: flowlogic_user
+    region: oregon
+    
+  # Redis Cache
+  - type: redis
+    name: flowlogic-redis
+    plan: starter
+    region: oregon
+    
+  # Main API Service
+  - type: web
+    name: flowlogic-api
+    runtime: docker
+    plan: standard
+    region: oregon
+    dockerfilePath: ./docker/Dockerfile.api
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flowlogic-postgres
+          property: connectionString
+      - key: ASYNC_DATABASE_URL
+        fromDatabase:
+          name: flowlogic-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: flowlogic-redis
+          property: connectionString
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
+        sync: false  # Set manually in dashboard
+      - key: STRIPE_SECRET_KEY
+        sync: false  # Set manually in dashboard
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false  # Set manually in dashboard
+      - key: STRIPE_PRICE_STARTER
+        sync: false  # Set manually in dashboard
+      - key: STRIPE_PRICE_PROFESSIONAL
+        sync: false  # Set manually in dashboard
+      - key: STRIPE_PRICE_ENTERPRISE
+        sync: false  # Set manually in dashboard
+      - key: OPENAI_API_KEY
+        sync: false  # Set manually in dashboard (optional)
+      - key: CREATE_ADMIN
+        value: true
+      - key: ADMIN_EMAIL
+        sync: false  # Set manually in dashboard
+      - key: ADMIN_FIREBASE_UID
+        sync: false  # Set manually in dashboard
+    buildCommand: echo "Using Docker build"
+    startCommand: /entrypoint.sh
+    disk:
+      name: api-disk
+      sizeGB: 10
+      mountPath: /app/data
+    autoDeploy: true
+    
+  # Optional: NGINX Reverse Proxy (for custom domains)
+  - type: web
+    name: flowlogic-nginx
+    runtime: docker
+    plan: starter
+    region: oregon
+    dockerContext: ./docker/nginx
+    dockerfile: Dockerfile
+    envVars:
+      - key: API_UPSTREAM
+        fromService:
+          type: web
+          name: flowlogic-api
+          property: host
+    buildCommand: echo "Using Docker build"
+    # Only deploy this if you need custom domain routing

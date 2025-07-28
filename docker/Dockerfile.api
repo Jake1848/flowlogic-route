@@ -1,0 +1,69 @@
+# Multi-stage build for smaller image size
+FROM python:3.11-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    curl \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
+WORKDIR /build
+
+# Copy requirements files
+COPY app/requirements.txt ./app-requirements.txt
+COPY saas/requirements.txt ./saas-requirements.txt
+
+# Create combined requirements
+RUN cat app-requirements.txt saas-requirements.txt | sort | uniq > requirements.txt
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --user -r requirements.txt
+
+# Production stage
+FROM python:3.11-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python dependencies from builder
+COPY --from=builder /root/.local /root/.local
+
+# Make sure scripts in .local are usable
+ENV PATH=/root/.local/bin:$PATH
+
+# Set work directory
+WORKDIR /app
+
+# Copy application code
+COPY app/ ./app/
+COPY saas/ ./saas/
+COPY models/ ./models/
+COPY services/ ./services/
+COPY utils/ ./utils/
+
+# Create necessary directories
+RUN mkdir -p logs data
+
+# Copy startup script
+COPY docker/scripts/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Expose ports
+EXPOSE 8000 8001
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health && curl -f http://localhost:8001/health || exit 1
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Run the entrypoint script
+ENTRYPOINT ["/entrypoint.sh"]
