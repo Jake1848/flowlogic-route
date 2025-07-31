@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional, Tuple, Any
 from models.models import TruckRoute, Stop, Truck, RoutingResponse, SpecialConstraint, TruckType
-import openai
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 import logging
@@ -18,10 +18,11 @@ class NaturalLanguageProcessor:
     def __init__(self):
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         if self.openai_api_key:
-            openai.api_key = self.openai_api_key
+            self.client = OpenAI(api_key=self.openai_api_key)
             self.use_llm = True
             logger.info("OpenAI API configured for enhanced explanations")
         else:
+            self.client = None
             self.use_llm = False
             logger.info("Using rule-based natural language generation")
         
@@ -253,7 +254,7 @@ class NaturalLanguageProcessor:
             Keep it concise but informative, suitable for a logistics manager.
             """
             
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a logistics optimization expert."},
@@ -366,7 +367,7 @@ class NaturalLanguageProcessor:
             Only return valid JSON, no explanations:
             """
             
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a logistics AI that parses routing constraints into JSON."},
@@ -538,7 +539,7 @@ class NaturalLanguageProcessor:
                 }}
                 """
                 
-                response = openai.ChatCompletion.create(
+                response = self.client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are a logistics AI that analyzes delivery addresses."},
@@ -634,7 +635,7 @@ class NaturalLanguageProcessor:
             ["address1", "address2", ...]
             """
             
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are an address parsing AI. Return only valid JSON."},
@@ -699,7 +700,7 @@ class NaturalLanguageProcessor:
             Only return valid JSON:
             """
             
-            response = openai.ChatCompletion.create(
+            response = self.client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": "You are a time window estimation AI."},
