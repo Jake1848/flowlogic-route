@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { Truck, Menu, X, BarChart3, Map, MessageSquare } from 'lucide-react';
+import { Menu, X, BarChart3, Map, MessageSquare } from 'lucide-react';
+import { Button } from '../ui/button';
 import { cn } from '../../utils/cn';
 
 const Header: React.FC = () => {
@@ -13,22 +14,26 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 py-3">
+    <header className="bg-card border-b border-border px-4 py-3">
       <div className="flex items-center justify-between">
         {/* Logo and title */}
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
-            <Truck className="h-8 w-8 text-primary-600" />
+            <img 
+              src="/logo.png" 
+              alt="FlowLogic RouteAI" 
+              className="h-8 w-8 object-contain"
+            />
             <div>
-              <h1 className="text-xl font-bold text-gray-900">FlowLogic RouteAI</h1>
-              <p className="text-xs text-gray-500">Autonomous Truck Routing</p>
+              <h1 className="text-xl font-bold text-foreground">FlowLogic RouteAI</h1>
+              <p className="text-xs text-muted-foreground">Autonomous Truck Routing</p>
             </div>
           </div>
           
           {isLoading && (
             <div className="flex items-center space-x-2 ml-6">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
-              <span className="text-sm text-gray-600">Optimizing routes...</span>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              <span className="text-sm text-muted-foreground">Optimizing routes...</span>
             </div>
           )}
         </div>
@@ -38,30 +43,28 @@ const Header: React.FC = () => {
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
-              <button
+              <Button
                 key={tab.id}
+                variant={activeTab === tab.id ? "default" : "ghost"}
                 onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors",
-                  activeTab === tab.id
-                    ? "bg-primary-100 text-primary-700"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                )}
+                className="flex items-center space-x-2"
               >
                 <Icon className="h-4 w-4" />
                 <span>{tab.label}</span>
-              </button>
+              </Button>
             );
           })}
         </nav>
 
         {/* Mobile menu button */}
-        <button
-          className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
           onClick={() => setActiveTab(activeTab === 'input' ? 'results' : 'input')}
         >
           {activeTab === 'input' ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </button>
+        </Button>
       </div>
 
       {/* Mobile tabs */}
@@ -69,19 +72,16 @@ const Header: React.FC = () => {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
-            <button
+            <Button
               key={tab.id}
+              variant={activeTab === tab.id ? "default" : "ghost"}
               onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                "flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors",
-                activeTab === tab.id
-                  ? "bg-primary-100 text-primary-700"
-                  : "text-gray-600 hover:bg-gray-100"
-              )}
+              className="flex-1 flex items-center justify-center space-x-1"
+              size="sm"
             >
               <Icon className="h-4 w-4" />
               <span>{tab.label}</span>
-            </button>
+            </Button>
           );
         })}
       </nav>

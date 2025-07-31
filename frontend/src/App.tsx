@@ -1,33 +1,38 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
+import { ThemeProvider } from './components/theme-provider';
 import Layout from './components/Layout/Layout';
-import './App.css';
 
 function App() {
   return (
-    <div className="App min-h-screen bg-gray-50">
-      <Layout />
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-          success: {
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem={false}
+      disableTransitionOnChange
+    >
+      <div className="min-h-screen bg-background">
+        <Layout />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            className: 'bg-card text-card-foreground border border-border',
             style: {
-              background: '#10b981',
+              background: 'hsl(var(--card))',
+              color: 'hsl(var(--card-foreground))',
+              borderColor: 'hsl(var(--border))',
             },
-          },
-          error: {
-            style: {
-              background: '#ef4444',
+            success: {
+              className: 'bg-green-600 text-white',
             },
-          },
-        }}
-      />
-    </div>
+            error: {
+              className: 'bg-red-600 text-white',
+            },
+          }}
+        />
+      </div>
+    </ThemeProvider>
   );
 }
 

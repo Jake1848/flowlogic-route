@@ -1,7 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { MapPin, Upload, FileText, Copy, Sparkles, Play } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import { MapPin, Upload, FileText, Copy, Play } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Textarea } from '../ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
+import { Card, CardContent } from '../ui/card';
 import { useRouting } from '../../hooks/useRouting';
 import toast from 'react-hot-toast';
 
@@ -66,148 +69,128 @@ Target, 18001 Biscayne Blvd, Aventura, FL
 Kroger, 1045 Kane Concourse, Bay Harbor Islands, FL`;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Input method tabs */}
-      <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
-        <button
-          onClick={() => setActiveMethod('manual')}
-          className={cn(
-            "flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-md text-sm font-medium transition-colors",
-            activeMethod === 'manual'
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
-          )}
-        >
-          <FileText className="h-4 w-4" />
-          <span>Manual</span>
-        </button>
-        
-        <button
-          onClick={() => setActiveMethod('paste')}
-          className={cn(
-            "flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-md text-sm font-medium transition-colors",
-            activeMethod === 'paste'
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
-          )}
-        >
-          <Copy className="h-4 w-4" />
-          <span>Paste</span>
-        </button>
-        
-        <button
-          onClick={() => setActiveMethod('csv')}
-          className={cn(
-            "flex-1 flex items-center justify-center space-x-1 py-2 px-3 rounded-md text-sm font-medium transition-colors",
-            activeMethod === 'csv'
-              ? "bg-white text-gray-900 shadow-sm"
-              : "text-gray-600 hover:text-gray-900"
-          )}
-        >
-          <Upload className="h-4 w-4" />
-          <span>CSV</span>
-        </button>
-      </div>
+      <Tabs value={activeMethod} onValueChange={(value) => setActiveMethod(value as any)}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="manual" className="flex items-center space-x-2">
+            <FileText className="h-4 w-4" />
+            <span>Manual</span>
+          </TabsTrigger>
+          <TabsTrigger value="paste" className="flex items-center space-x-2">
+            <Copy className="h-4 w-4" />
+            <span>Paste</span>
+          </TabsTrigger>
+          <TabsTrigger value="csv" className="flex items-center space-x-2">
+            <Upload className="h-4 w-4" />
+            <span>CSV</span>
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Manual input */}
-      {activeMethod === 'manual' && (
-        <div className="space-y-3">
-          <textarea
+        {/* Manual input */}
+        <TabsContent value="manual" className="space-y-3">
+          <Textarea
             value={addresses}
             onChange={(e) => setAddresses(e.target.value)}
-            placeholder="Enter delivery addresses (one per line)&#10;&#10;Example:&#10;123 Main St, Atlanta, GA&#10;456 Oak Ave, Marietta, GA&#10;789 Pine Rd, Decatur, GA"
-            className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm"
+            placeholder="Enter delivery addresses (one per line)
+
+Example:
+123 Main St, Atlanta, GA
+456 Oak Ave, Marietta, GA
+789 Pine Rd, Decatur, GA"
+            className="min-h-[128px] resize-none"
             disabled={isLoading}
           />
           
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setAddresses(exampleAddresses)}
-            className="text-xs text-primary-600 hover:text-primary-700 flex items-center space-x-1"
             disabled={isLoading}
+            className="text-xs text-muted-foreground hover:text-foreground"
           >
-            <Sparkles className="h-3 w-3" />
-            <span>Use example addresses</span>
-          </button>
-        </div>
-      )}
+            Use example addresses
+          </Button>
+        </TabsContent>
 
-      {/* Paste input */}
-      {activeMethod === 'paste' && (
-        <div className="space-y-3">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <Copy className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-3">
-              Copy addresses from any source and paste them here
-            </p>
-            <button
-              onClick={handlePasteAddresses}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
-              disabled={isLoading}
-            >
-              Paste from Clipboard
-            </button>
-          </div>
+        {/* Paste input */}
+        <TabsContent value="paste" className="space-y-3">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Copy className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground mb-3">
+                Copy addresses from any source and paste them here
+              </p>
+              <Button
+                onClick={handlePasteAddresses}
+                disabled={isLoading}
+              >
+                Paste from Clipboard
+              </Button>
+            </CardContent>
+          </Card>
           
           {addresses && (
-            <textarea
+            <Textarea
               value={addresses}
               onChange={(e) => setAddresses(e.target.value)}
-              className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm"
+              className="min-h-[96px] resize-none"
               disabled={isLoading}
             />
           )}
-        </div>
-      )}
+        </TabsContent>
 
-      {/* CSV upload */}
-      {activeMethod === 'csv' && (
-        <div className="space-y-3">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-3">
-              Upload a CSV file with delivery addresses
-            </p>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm"
-              disabled={isLoading}
-            >
-              Choose CSV File
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </div>
+        {/* CSV upload */}
+        <TabsContent value="csv" className="space-y-3">
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground mb-3">
+                Upload a CSV file with delivery addresses
+              </p>
+              <Button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isLoading}
+              >
+                Choose CSV File
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </CardContent>
+          </Card>
           
           {csvFile && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-              <div className="flex items-center space-x-2">
-                <FileText className="h-4 w-4 text-green-600" />
-                <span className="text-sm text-green-800 font-medium">{csvFile.name}</span>
-                <span className="text-xs text-green-600">
-                  ({(csvFile.size / 1024).toFixed(1)} KB)
-                </span>
-              </div>
-            </div>
+            <Card className="border-green-200 bg-green-50/50">
+              <CardContent className="p-3">
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-green-800 font-medium">{csvFile.name}</span>
+                  <span className="text-xs text-green-600">
+                    ({(csvFile.size / 1024).toFixed(1)} KB)
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
           )}
           
-          <div className="text-xs text-gray-500">
+          <div className="text-xs text-muted-foreground">
             <p className="font-medium">Expected CSV format:</p>
-            <code className="bg-gray-100 px-1 rounded text-xs">
+            <code className="bg-muted px-1 rounded text-xs">
               Address, Pallets, Special, TimeWindow
             </code>
           </div>
-        </div>
-      )}
+        </TabsContent>
+      </Tabs>
 
       {/* Optional settings */}
-      <div className="space-y-3 pt-2 border-t border-gray-200">
+      <div className="space-y-4 pt-4 border-t border-border">
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Depot Address (Optional)
           </label>
           <input
@@ -215,48 +198,44 @@ Kroger, 1045 Kane Concourse, Bay Harbor Islands, FL`;
             value={depotAddress}
             onChange={(e) => setDepotAddress(e.target.value)}
             placeholder="Starting warehouse or depot location"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+            className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-sm"
             disabled={isLoading}
           />
         </div>
         
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Additional Constraints
           </label>
-          <textarea
+          <Textarea
             value={constraints}
             onChange={(e) => setConstraints(e.target.value)}
             placeholder="e.g., 'Avoid highways during rush hour' or 'Deliver frozen goods first'"
-            className="w-full h-16 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none text-sm"
+            className="min-h-[64px] resize-none"
             disabled={isLoading}
           />
         </div>
       </div>
 
       {/* Generate routes button */}
-      <button
+      <Button
         onClick={handleGenerateRoutes}
         disabled={(!addresses.trim() && !csvFile) || isLoading}
-        className={cn(
-          "w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-lg font-medium transition-colors",
-          (!addresses.trim() && !csvFile) || isLoading
-            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-            : "bg-primary-600 text-white hover:bg-primary-700"
-        )}
+        size="lg"
+        className="w-full"
       >
         {isLoading ? (
           <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
             <span>Optimizing Routes...</span>
           </>
         ) : (
           <>
-            <Play className="h-4 w-4" />
+            <Play className="h-4 w-4 mr-2" />
             <span>Generate Optimal Routes</span>
           </>
         )}
-      </button>
+      </Button>
     </div>
   );
 };

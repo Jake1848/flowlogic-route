@@ -9,7 +9,7 @@ const Layout: React.FC = () => {
   const { activeTab } = useAppStore();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
       <div className="flex-1 flex overflow-hidden">
@@ -32,7 +32,7 @@ const Layout: React.FC = () => {
         activeTab === 'input' ? "opacity-100" : "opacity-0 pointer-events-none"
       )}>
         <div className={cn(
-          "absolute inset-y-0 left-0 w-80 bg-white shadow-xl transform transition-transform",
+          "absolute inset-y-0 left-0 w-80 bg-card shadow-xl transform transition-transform",
           activeTab === 'input' ? "translate-x-0" : "-translate-x-full"
         )}>
           <Sidebar />
