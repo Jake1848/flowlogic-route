@@ -1,25 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
+import mapboxgl from 'mapbox-gl';
 import { useAppStore } from '../../store/useAppStore';
 import { MapPin, Navigation, Truck, AlertCircle, Layers } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
-// Mock Mapbox implementation for development
+// Set Mapbox access token
+mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN || '';
+
 const RouteMap: React.FC = () => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
   const [activeLayer, setActiveLayer] = useState('routes');
   
   const { currentRoutes, isLoading } = useAppStore();
-
-  useEffect(() => {
-    // Simulate map loading
-    const timer = setTimeout(() => {
-      setMapLoaded(true);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const truckColors = [
     '#3B82F6', // Blue
@@ -36,6 +32,194 @@ const RouteMap: React.FC = () => {
     { id: 'trucks', label: 'Trucks', icon: Truck },
   ];
 
+  useEffect(() => {
+    if (!mapContainerRef.current || !mapboxgl.accessToken) return;
+
+    // Initialize map
+    const map = new mapboxgl.Map({
+      container: mapContainerRef.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [-98.5795, 39.8283], // Center of USA
+      zoom: 4,
+    });
+
+    mapRef.current = map;
+
+    map.on('load', () => {
+      setMapLoaded(true);
+      
+      // Add navigation controls
+      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      
+      // Add scale control
+      map.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
+    });
+
+    return () => {
+      map.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded || !currentRoutes.length) return;
+
+    const map = mapRef.current;
+    const bounds = new mapboxgl.LngLatBounds();
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Clear existing layers and sources
+    ['route', 'stop', 'depot'].forEach(type => {
+      currentRoutes.forEach((_, index) => {
+        const sourceId = `${type}-${index}`;
+        if (map.getLayer(sourceId)) map.removeLayer(sourceId);
+        if (map.getLayer(`${sourceId}-symbol`)) map.removeLayer(`${sourceId}-symbol`);
+        if (map.getSource(sourceId)) map.removeSource(sourceId);
+      });
+    });
+
+    // Check if we have real coordinates
+    const hasRealCoordinates = currentRoutes.some(route => 
+      (route.depot_latitude && route.depot_longitude) || 
+      route.stops.some(stop => stop.latitude && stop.longitude)
+    );
+
+    // Add routes to map
+    currentRoutes.forEach((route, index) => {
+      const color = truckColors[index % truckColors.length];
+      
+      // Create route line from stops
+      if (route.stops.length > 0) {
+        const coordinates: [number, number][] = [];
+        
+        // Use real or mock depot coordinates
+        let depotLng = route.depot_longitude || -98.5795 + (index * 0.1);
+        let depotLat = route.depot_latitude || 39.8283 + (index * 0.1);
+        coordinates.push([depotLng, depotLat]);
+        bounds.extend([depotLng, depotLat]);
+        
+        // Add depot marker
+        const depotMarker = new mapboxgl.Marker({ color })
+          .setLngLat([depotLng, depotLat])
+          .setPopup(new mapboxgl.Popup().setHTML(`
+            <strong>Depot - Truck ${route.truck_id}</strong><br/>
+            ${route.depot_address || 'Main Depot'}
+          `))
+          .addTo(map);
+        markersRef.current.push(depotMarker);
+        
+        // Add stop coordinates
+        route.stops.forEach((stop, stopIndex) => {
+          // Use real coordinates if available, otherwise use mock
+          let lng: number, lat: number;
+          
+          if (stop.longitude && stop.latitude) {
+            lng = stop.longitude;
+            lat = stop.latitude;
+          } else {
+            // Generate mock coordinates in a pattern
+            lng = depotLng + (stopIndex + 1) * 0.2 * Math.cos(stopIndex * 0.5);
+            lat = depotLat + (stopIndex + 1) * 0.15 * Math.sin(stopIndex * 0.5);
+          }
+          
+          coordinates.push([lng, lat]);
+          bounds.extend([lng, lat]);
+          
+          // Add stop marker
+          const stopMarker = new mapboxgl.Marker({ 
+            color: 'white',
+            scale: 0.8
+          })
+            .setLngLat([lng, lat])
+            .setPopup(new mapboxgl.Popup().setHTML(`
+              <strong>Stop #${stop.stop_id}</strong><br/>
+              ${stop.address || 'Stop ' + stop.stop_id}<br/>
+              ${stop.pallets || 0} pallets<br/>
+              Window: ${stop.time_window_start || '08:00'}-${stop.time_window_end || '17:00'}<br/>
+              ETA: ${stop.estimated_arrival || stop.eta}
+            `))
+            .addTo(map);
+          
+          // Add stop number label
+          const el = stopMarker.getElement();
+          if (el) {
+            el.innerHTML = `<div style="background-color: ${color}; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; border: 2px solid white;">${stopIndex + 1}</div>`;
+          }
+          
+          markersRef.current.push(stopMarker);
+        });
+        
+        // Return to depot
+        coordinates.push([depotLng, depotLat]);
+        
+        // Add route line
+        map.addSource(`route-${index}`, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates,
+            },
+          },
+        });
+        
+        map.addLayer({
+          id: `route-${index}`,
+          type: 'line',
+          source: `route-${index}`,
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': color,
+            'line-width': 4,
+            'line-opacity': activeLayer === 'routes' ? 0.8 : 0.3,
+          },
+        });
+      }
+    });
+
+    // Fit map to bounds
+    if (!bounds.isEmpty()) {
+      map.fitBounds(bounds, { padding: 50 });
+    }
+  }, [currentRoutes, mapLoaded, activeLayer]);
+
+  // Update layer visibility based on activeLayer
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded) return;
+    
+    const map = mapRef.current;
+    
+    currentRoutes.forEach((_, index) => {
+      const routeLayer = `route-${index}`;
+      if (map.getLayer(routeLayer)) {
+        map.setPaintProperty(
+          routeLayer,
+          'line-opacity',
+          activeLayer === 'routes' ? 0.8 : 0.3
+        );
+      }
+    });
+  }, [activeLayer, currentRoutes, mapLoaded]);
+
+  if (!mapboxgl.accessToken) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Mapbox Token Missing</h3>
+          <p className="text-gray-600">Please add REACT_APP_MAPBOX_TOKEN to environment variables.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentRoutes.length) {
     return (
       <div className="h-full flex items-center justify-center bg-gray-50">
@@ -48,131 +232,19 @@ const RouteMap: React.FC = () => {
     );
   }
 
+  // Check if we're using real coordinates
+  const hasRealCoordinates = currentRoutes.some(route => 
+    (route.depot_latitude && route.depot_longitude) || 
+    route.stops.some(stop => stop.latitude && stop.longitude)
+  );
+
   return (
     <div className="h-full relative bg-gray-100">
       {/* Map container */}
       <div 
         ref={mapContainerRef}
-        className="w-full h-full relative overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-        }}
-      >
-        {!mapLoaded ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-              <p>Loading map...</p>
-            </div>
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-green-50">
-            {/* Mock map content */}
-            <div className="relative w-full h-full">
-              {/* Grid pattern for map effect */}
-              <div 
-                className="absolute inset-0 opacity-10"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
-                  `,
-                  backgroundSize: '50px 50px'
-                }}
-              />
-              
-              {/* Route visualization */}
-              <svg className="absolute inset-0 w-full h-full">
-                {currentRoutes.map((route, index) => {
-                  const color = truckColors[index % truckColors.length];
-                  const startX = 100 + index * 150;
-                  const startY = 150;
-                  
-                  return (
-                    <g key={route.truck_id}>
-                      {/* Route path */}
-                      <path
-                        d={`M ${startX} ${startY} Q ${startX + 100} ${startY + 50} ${startX + 200} ${startY + 100} Q ${startX + 300} ${startY + 150} ${startX + 400} ${startY + 200}`}
-                        stroke={color}
-                        strokeWidth="3"
-                        fill="none"
-                        strokeDasharray={activeLayer === 'routes' ? 'none' : '5,5'}
-                        className="transition-all duration-300"
-                      />
-                      
-                      {/* Truck icon */}
-                      <circle
-                        cx={startX}
-                        cy={startY}
-                        r="8"
-                        fill={color}
-                        className="animate-pulse-soft"
-                      />
-                      <text
-                        x={startX}
-                        y={startY + 25}
-                        textAnchor="middle"
-                        className="text-sm font-medium fill-gray-700"
-                      >
-                        Truck {route.truck_id}
-                      </text>
-                      
-                      {/* Stops */}
-                      {route.stops.map((stop, stopIndex) => {
-                        const stopX = startX + (stopIndex + 1) * 100;
-                        const stopY = startY + (stopIndex + 1) * 50;
-                        
-                        return (
-                          <g key={stop.stop_id}>
-                            <circle
-                              cx={stopX}
-                              cy={stopY}
-                              r="6"
-                              fill="white"
-                              stroke={color}
-                              strokeWidth="2"
-                              className={cn(
-                                "transition-opacity duration-300",
-                                activeLayer === 'stops' ? 'opacity-100' : 'opacity-70'
-                              )}
-                            />
-                            <text
-                              x={stopX}
-                              y={stopY + 20}
-                              textAnchor="middle"
-                              className="text-xs fill-gray-600"
-                            >
-                              #{stop.stop_id}
-                            </text>
-                          </g>
-                        );
-                      })}
-                    </g>
-                  );
-                })}
-              </svg>
-              
-              {/* Legend */}
-              <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs">
-                <h4 className="font-medium text-gray-900 mb-2">Route Legend</h4>
-                <div className="space-y-2">
-                  {currentRoutes.map((route, index) => (
-                    <div key={route.truck_id} className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded-full"
-                        style={{ backgroundColor: truckColors[index % truckColors.length] }}
-                      />
-                      <span className="text-sm text-gray-700">
-                        Truck {route.truck_id} - {route.stops.length} stops
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+        className="w-full h-full"
+      />
 
       {/* Map controls */}
       <div className="absolute top-4 right-4 flex flex-col space-y-2">
@@ -209,16 +281,6 @@ const RouteMap: React.FC = () => {
             </div>
           )}
         </div>
-
-        {/* Zoom controls */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          <button className="block px-3 py-2 text-gray-700 hover:bg-gray-50 w-full border-b border-gray-200">
-            <span className="text-lg font-medium">+</span>
-          </button>
-          <button className="block px-3 py-2 text-gray-700 hover:bg-gray-50 w-full">
-            <span className="text-lg font-medium">−</span>
-          </button>
-        </div>
       </div>
 
       {/* Route stats overlay */}
@@ -250,18 +312,38 @@ const RouteMap: React.FC = () => {
         </div>
       </div>
 
-      {/* Development notice */}
-      <div className="absolute bottom-4 right-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3 max-w-xs">
-        <div className="flex items-start space-x-2">
-          <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-          <div className="text-sm">
-            <p className="text-yellow-800 font-medium">Development Mode</p>
-            <p className="text-yellow-700 text-xs mt-1">
-              This is a mock map visualization. In production, integrate with Mapbox GL JS for real maps.
-            </p>
-          </div>
+      {/* Legend */}
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs">
+        <h4 className="font-medium text-gray-900 mb-2">Route Legend</h4>
+        <div className="space-y-2">
+          {currentRoutes.map((route, index) => (
+            <div key={route.truck_id} className="flex items-center space-x-2">
+              <div 
+                className="w-4 h-4 rounded-full"
+                style={{ backgroundColor: truckColors[index % truckColors.length] }}
+              />
+              <span className="text-sm text-gray-700">
+                Truck {route.truck_id} - {route.stops.length} stops
+              </span>
+            </div>
+          ))}
         </div>
       </div>
+
+      {/* Note about geocoding if using mock coordinates */}
+      {!hasRealCoordinates && (
+        <div className="absolute bottom-4 right-4 bg-blue-50 border border-blue-200 rounded-lg p-3 max-w-xs">
+          <div className="flex items-start space-x-2">
+            <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="text-blue-800 font-medium">Note</p>
+              <p className="text-blue-700 text-xs mt-1">
+                Using mock coordinates. Real addresses require geocoding from the backend.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

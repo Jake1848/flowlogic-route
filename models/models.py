@@ -53,6 +53,13 @@ class RouteStop(BaseModel):
     departure_time: datetime
     distance_from_previous: float
     notes: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    address: Optional[str] = None
+    pallets: Optional[int] = None
+    time_window_start: Optional[str] = None
+    time_window_end: Optional[str] = None
+    estimated_arrival: Optional[str] = None
 
 
 class TruckRoute(BaseModel):
@@ -63,6 +70,9 @@ class TruckRoute(BaseModel):
     fuel_estimate: float
     utilization_percent: float
     reasoning: str
+    depot_latitude: Optional[float] = None
+    depot_longitude: Optional[float] = None
+    depot_address: Optional[str] = None
 
 
 class RoutingRequest(BaseModel):

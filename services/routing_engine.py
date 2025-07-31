@@ -255,7 +255,14 @@ class RoutingEngine:
                     arrival_time=arrival_time,
                     departure_time=departure_time,
                     distance_from_previous=distance,
-                    notes=self._get_stop_notes(stop, len(route_stops) + 1)
+                    notes=self._get_stop_notes(stop, len(route_stops) + 1),
+                    latitude=stop.latitude,
+                    longitude=stop.longitude,
+                    address=stop.address,
+                    pallets=stop.pallets,
+                    time_window_start=stop.time_window_start.strftime("%H:%M"),
+                    time_window_end=stop.time_window_end.strftime("%H:%M"),
+                    estimated_arrival=arrival_time.strftime("%H:%M")
                 )
                 
                 route_stops.append(route_stop)
@@ -288,7 +295,10 @@ class RoutingEngine:
             total_time_hours=round(total_time_hours, 2),
             fuel_estimate=round(total_distance * truck.cost_per_mile, 2),
             utilization_percent=round((total_pallets / truck.max_pallets) * 100, 1),
-            reasoning=self._generate_route_reasoning(truck, route_stops, stops)
+            reasoning=self._generate_route_reasoning(truck, route_stops, stops),
+            depot_latitude=truck.depot_latitude,
+            depot_longitude=truck.depot_longitude,
+            depot_address=truck.depot_address
         )
     
     def _greedy_route(self, truck: Truck, stops: List[Stop], 
@@ -338,7 +348,14 @@ class RoutingEngine:
                 arrival_time=arrival_time,
                 departure_time=departure_time,
                 distance_from_previous=best_distance,
-                notes=self._get_stop_notes(best_stop, len(route_stops) + 1)
+                notes=self._get_stop_notes(best_stop, len(route_stops) + 1),
+                latitude=best_stop.latitude,
+                longitude=best_stop.longitude,
+                address=best_stop.address,
+                pallets=best_stop.pallets,
+                time_window_start=best_stop.time_window_start.strftime("%H:%M"),
+                time_window_end=best_stop.time_window_end.strftime("%H:%M"),
+                estimated_arrival=arrival_time.strftime("%H:%M")
             )
             
             route_stops.append(route_stop)
@@ -362,7 +379,10 @@ class RoutingEngine:
             total_time_hours=round(total_time_hours, 2),
             fuel_estimate=round(total_distance * truck.cost_per_mile, 2),
             utilization_percent=round((total_pallets / truck.max_pallets) * 100, 1),
-            reasoning=self._generate_route_reasoning(truck, route_stops, stops)
+            reasoning=self._generate_route_reasoning(truck, route_stops, stops),
+            depot_latitude=truck.depot_latitude,
+            depot_longitude=truck.depot_longitude,
+            depot_address=truck.depot_address
         )
     
     def _create_empty_route(self, truck: Truck) -> TruckRoute:
@@ -374,7 +394,10 @@ class RoutingEngine:
             total_time_hours=0,
             fuel_estimate=0,
             utilization_percent=0,
-            reasoning=f"No compatible stops found for {truck.truck_id}"
+            reasoning=f"No compatible stops found for {truck.truck_id}",
+            depot_latitude=truck.depot_latitude,
+            depot_longitude=truck.depot_longitude,
+            depot_address=truck.depot_address
         )
     
     def _get_stop_notes(self, stop: Stop, position: int) -> str:

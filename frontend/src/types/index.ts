@@ -7,6 +7,8 @@ export interface Stop {
   pallets: number;
   special_constraint: 'None' | 'Fragile' | 'Refrigerated' | 'Frozen' | 'Hazmat' | 'Heavy';
   service_time_minutes: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Truck {
@@ -18,6 +20,8 @@ export interface Truck {
   shift_end: string;
   cost_per_mile: number;
   avg_speed_mph: number;
+  depot_latitude?: number;
+  depot_longitude?: number;
 }
 
 export interface RouteStop {
@@ -25,6 +29,13 @@ export interface RouteStop {
   eta: string;
   distance_from_previous: number;
   notes: string;
+  latitude?: number;
+  longitude?: number;
+  address?: string;
+  pallets?: number;
+  time_window_start?: string;
+  time_window_end?: string;
+  estimated_arrival?: string;
 }
 
 export interface TruckRoute {
@@ -35,6 +46,9 @@ export interface TruckRoute {
   fuel_estimate: number;
   utilization_percent: number;
   reasoning: string;
+  depot_latitude?: number;
+  depot_longitude?: number;
+  depot_address?: string;
 }
 
 export interface RoutingResponse {
