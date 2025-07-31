@@ -52,7 +52,7 @@ const WelcomeScreen: React.FC = () => {
   ];
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-background to-muted/20">
+    <div className="h-full overflow-y-auto bg-background">
       <div className="max-w-6xl mx-auto p-8">
         {/* Hero section */}
         <div className="text-center py-12">
@@ -61,7 +61,7 @@ const WelcomeScreen: React.FC = () => {
               <img 
                 src="/logo.png" 
                 alt="FlowLogic RouteAI" 
-                className="h-16 w-16 object-contain"
+                className="h-32 w-32 object-contain"
               />
             </div>
           </div>

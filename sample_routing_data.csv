@@ -1,0 +1,21 @@
+Address,Pallets,Special,TimeWindow
+"Walmart Supercenter, 2801 Biscayne Blvd, Miami, FL 33137",8,Refrigerated,8:00-10:00
+"Target, 18001 Biscayne Blvd, Aventura, FL 33180",5,Standard,9:00-12:00
+"Home Depot, 1250 NW 167th St, Miami Gardens, FL 33169",12,Heavy Equipment,7:00-11:00
+"Publix Super Market, 1776 Alton Rd, Miami Beach, FL 33139",6,Frozen Goods,6:00-8:00
+"Kroger, 1045 Kane Concourse, Bay Harbor Islands, FL 33154",4,Refrigerated,8:00-10:00
+"CVS Pharmacy, 1515 Euclid Ave, Miami Beach, FL 33139",2,Medical Supplies,9:00-17:00
+"Whole Foods Market, 1020 Alton Rd, Miami Beach, FL 33139",7,Organic/Fragile,7:00-9:00
+"Costco Wholesale, 13450 Biscayne Blvd, North Miami, FL 33181",15,Bulk Items,8:00-12:00
+"Walgreens, 8550 Coral Way, Miami, FL 33155",3,Pharmaceutical,10:00-18:00
+"Fresh Market, 1500 Biscayne Blvd, Miami, FL 33132",5,Perishable,6:00-8:00
+"Office Depot, 9000 SW 152nd St, Palmetto Bay, FL 33157",9,Office Supplies,9:00-17:00
+"Best Buy, 9350 N Kendall Dr, Miami, FL 33176",6,Electronics/Fragile,10:00-14:00
+"PetSmart, 8300 Mills Dr, Miami, FL 33183",4,Pet Supplies,9:00-17:00
+"Bed Bath & Beyond, 9701 NE 2nd Ave, Miami Shores, FL 33138",8,Home Goods,10:00-16:00
+"Trader Joe's, 9155 S Dadeland Blvd, Miami, FL 33156",5,Specialty Foods,7:00-10:00
+"AutoZone, 14650 NW 7th Ave, Miami, FL 33168",10,Auto Parts,8:00-18:00
+"Lowe's, 15701 NW 57th Ave, Miami Lakes, FL 33014",14,Building Materials,7:00-12:00
+"Dick's Sporting Goods, 8400 NW 36th St, Doral, FL 33166",6,Sporting Equipment,10:00-15:00
+"Macy's, 7795 W Flagler St, Miami, FL 33144",7,Department Store,11:00-16:00
+"GameStop, 11401 NW 12th St, Miami, FL 33172",2,Electronics,12:00-18:00
