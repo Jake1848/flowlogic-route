@@ -31,6 +31,20 @@ const SimplifiedApp: React.FC = () => {
   
   const { generateRoutes, isLoading: routingLoading } = useRouting();
 
+  const convertTextToAddresses = (text: string) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map((line) => ({
+      Address: line.trim(),
+      Pallets: Math.floor(Math.random() * 10) + 1,
+      Special: 'Standard',
+      TimeWindow: '8:00-17:00'
+    }));
+  };
+
+  const convertAddressesToText = (addresses: any[]) => {
+    return addresses.map(addr => addr.Address).join('\n');
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -109,8 +123,8 @@ const SimplifiedApp: React.FC = () => {
 
                   <TabsContent value="paste" className="space-y-4">
                     <Textarea
-                      value={addresses}
-                      onChange={(e) => setAddresses(e.target.value)}
+                      value={convertAddressesToText(addresses)}
+                      onChange={(e) => setAddresses(convertTextToAddresses(e.target.value))}
                       placeholder="Enter delivery addresses (one per line)
 
 Example:
