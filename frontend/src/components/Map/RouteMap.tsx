@@ -1,13 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { useAppStore } from '../../store/useAppStore';
 import { MapPin, Navigation, Truck, AlertCircle, Layers } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { TruckRoute } from '../../types';
 
 // Set Mapbox access token
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN || '';
 
-const RouteMap: React.FC = () => {
+interface RouteMapProps {
+  routes: TruckRoute[];
+}
+
+const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -15,7 +19,8 @@ const RouteMap: React.FC = () => {
   const [showLayers, setShowLayers] = useState(false);
   const [activeLayer, setActiveLayer] = useState('routes');
   
-  const { currentRoutes, isLoading } = useAppStore();
+  const currentRoutes = routes;
+  const isLoading = false;
 
   const truckColors = [
     '#3B82F6', // Blue
