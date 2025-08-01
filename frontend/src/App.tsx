@@ -1,7 +1,7 @@
 import React from 'react';
 import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from './components/theme-provider';
-import SimplifiedApp from './components/SimplifiedApp';
+import EnhancedApp from './components/EnhancedApp';
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
       disableTransitionOnChange
     >
       <div className="min-h-screen bg-background">
-        <SimplifiedApp />
+        <EnhancedApp />
         <Toaster 
           position="top-right"
           toastOptions={{
