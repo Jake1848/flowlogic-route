@@ -24,7 +24,7 @@ const AddressInput: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const isLoading = false;
   
-  const { performAutonomousRouting } = useRouting();
+  const { generateRoutes } = useRouting();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -56,7 +56,7 @@ const AddressInput: React.FC = () => {
     }
 
     try {
-      await performAutonomousRouting(addresses, specialInstructions, depotAddress);
+      await generateRoutes();
     } catch (error) {
       console.error('Routing error:', error);
     }
