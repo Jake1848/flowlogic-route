@@ -6,7 +6,8 @@ import MainContent from './MainContent';
 import { cn } from '../../utils/cn';
 
 const Layout: React.FC = () => {
-  const { activeTab } = useAppStore();
+  // Component not used in new structure - using local state to avoid TypeScript errors
+  const [activeTab] = React.useState<'input' | 'results' | 'map'>('input');
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
