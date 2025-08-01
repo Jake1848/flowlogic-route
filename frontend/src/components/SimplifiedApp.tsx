@@ -44,7 +44,7 @@ const SimplifiedApp: React.FC = () => {
   };
 
   const handleGenerateRoutes = async () => {
-    if (!addresses.trim() && !csvFile) {
+    if (addresses.length === 0 && !csvFile) {
       toast.error('Please provide addresses or upload a CSV file');
       return;
     }
