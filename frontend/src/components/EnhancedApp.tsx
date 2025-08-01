@@ -29,6 +29,13 @@ import RouteMap from './Map/RouteMap';
 import ResultsSummary from './Results/ResultsSummary';
 import Papa from 'papaparse';
 
+interface Address {
+  Address: string;
+  Pallets: number;
+  Special: string;
+  TimeWindow: string;
+}
+
 const EnhancedApp: React.FC = () => {
   const [currentView, setCurrentView] = useState<'home' | 'input' | 'results'>('home');
   const [inputMethod, setInputMethod] = useState<'paste' | 'upload'>('paste');
@@ -68,7 +75,12 @@ const EnhancedApp: React.FC = () => {
       complete: (results) => {
         const validRows = results.data.filter((row: any) => 
           row.Address && row.Address.trim() !== ''
-        );
+        ).map((row: any) => ({
+          Address: row.Address?.trim() || '',
+          Pallets: parseInt(row.Pallets) || Math.floor(Math.random() * 10) + 1,
+          Special: row.Special || 'Standard',
+          TimeWindow: row.TimeWindow || '8:00-17:00'
+        }));
         
         if (validRows.length > 0) {
           setAddresses(validRows);
