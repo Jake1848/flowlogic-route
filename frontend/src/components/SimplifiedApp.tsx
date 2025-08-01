@@ -240,7 +240,7 @@ Example:
               <CardContent>
                 <Button
                   onClick={handleGenerateRoutes}
-                  disabled={(!addresses.trim() && !csvFile) || isLoading}
+                  disabled={(addresses.length === 0 && !csvFile) || isLoading}
                   size="lg"
                   className="w-full"
                 >
