@@ -137,7 +137,7 @@ Example:
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setAddresses(exampleAddresses)}
+                      onClick={() => setAddresses(convertTextToAddresses(exampleAddresses))}
                       disabled={isLoading}
                     >
                       Use Example Addresses
