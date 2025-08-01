@@ -1,0 +1,51 @@
+Address,Pallets,Special,TimeWindow
+"123 Main Street, Atlanta, GA 30303",5,Standard,8:00-12:00
+"456 Peachtree Street NE, Atlanta, GA 30308",8,Refrigerated,9:00-11:00
+"789 Ponce de Leon Ave, Atlanta, GA 30306",3,Fragile,10:00-14:00
+"1010 West Peachtree St NW, Atlanta, GA 30309",6,Standard,8:00-10:00
+"2020 Marietta Street NW, Atlanta, GA 30318",10,Heavy Equipment,7:00-9:00
+"3030 Piedmont Road NE, Atlanta, GA 30305",4,Frozen Goods,6:00-8:00
+"4040 Roswell Road, Atlanta, GA 30342",7,Standard,9:00-13:00
+"5050 Buford Highway, Atlanta, GA 30340",12,Bulk Items,8:00-11:00
+"6060 North Avenue NW, Atlanta, GA 30308",2,Medical Supplies,10:00-16:00
+"7070 Memorial Drive, Atlanta, GA 30316",9,Standard,11:00-15:00
+"8080 Holcomb Bridge Road, Roswell, GA 30076",5,Refrigerated,8:00-10:00
+"9090 Alpharetta Highway, Roswell, GA 30076",6,Standard,9:00-12:00
+"1111 Canton Street, Roswell, GA 30075",3,Fragile,10:00-14:00
+"2222 Old Milton Parkway, Alpharetta, GA 30009",8,Standard,8:00-11:00
+"3333 Windward Parkway, Alpharetta, GA 30005",11,Heavy Equipment,7:00-10:00
+"4444 McGinnis Ferry Road, Suwanee, GA 30024",4,Frozen Goods,6:00-8:00
+"5555 Satellite Boulevard, Duluth, GA 30096",7,Standard,9:00-13:00
+"6666 Pleasant Hill Road, Duluth, GA 30096",5,Refrigerated,8:00-10:00
+"7777 Steve Reynolds Boulevard, Norcross, GA 30093",6,Standard,10:00-14:00
+"8888 Jimmy Carter Boulevard, Norcross, GA 30093",9,Bulk Items,8:00-12:00
+"9999 Medlock Bridge Road, Johns Creek, GA 30097",3,Medical Supplies,9:00-15:00
+"1234 State Bridge Road, Johns Creek, GA 30022",7,Standard,8:00-11:00
+"5678 Abbotts Bridge Road, Johns Creek, GA 30005",5,Refrigerated,7:00-9:00
+"9012 Jones Bridge Road, Johns Creek, GA 30022",8,Standard,10:00-13:00
+"3456 Mansell Road, Alpharetta, GA 30022",4,Fragile,9:00-12:00
+"7890 Haynes Bridge Road, Alpharetta, GA 30022",10,Heavy Equipment,8:00-11:00
+"2468 South Main Street, Alpharetta, GA 30009",6,Standard,9:00-14:00
+"1357 Crabapple Road, Milton, GA 30004",5,Frozen Goods,6:00-8:00
+"2580 Birmingham Highway, Milton, GA 30004",7,Standard,10:00-15:00
+"3690 Highway 9, Milton, GA 30004",9,Bulk Items,8:00-12:00
+"4321 Johnson Ferry Road, Marietta, GA 30068",4,Medical Supplies,9:00-16:00
+"5432 Lower Roswell Road, Marietta, GA 30068",6,Standard,8:00-11:00
+"6543 Paper Mill Road, Marietta, GA 30067",8,Refrigerated,7:00-10:00
+"7654 East Cobb Drive, Marietta, GA 30068",3,Fragile,10:00-13:00
+"8765 Shallowford Road, Marietta, GA 30066",11,Heavy Equipment,8:00-11:00
+"9876 Sandy Plains Road, Marietta, GA 30066",5,Standard,9:00-14:00
+"1122 Terrell Mill Road, Marietta, GA 30067",7,Frozen Goods,6:00-9:00
+"2233 Powers Ferry Road, Marietta, GA 30067",4,Standard,10:00-15:00
+"3344 Delk Road, Marietta, GA 30067",6,Refrigerated,8:00-10:00
+"4455 Franklin Gateway, Marietta, GA 30067",9,Bulk Items,9:00-12:00
+"5566 Windy Hill Road, Marietta, GA 30067",3,Medical Supplies,10:00-16:00
+"6677 Spring Hill Parkway, Smyrna, GA 30080",8,Standard,8:00-11:00
+"7788 Atlanta Road, Smyrna, GA 30080",5,Fragile,9:00-13:00
+"8899 South Cobb Drive, Smyrna, GA 30080",10,Heavy Equipment,7:00-10:00
+"9900 Concord Road, Smyrna, GA 30080",4,Standard,10:00-14:00
+"1010 Village Parkway, Smyrna, GA 30080",7,Frozen Goods,6:00-8:00
+"2020 Campbell Road, Smyrna, GA 30080",6,Refrigerated,8:00-11:00
+"3030 King Springs Road, Smyrna, GA 30080",5,Standard,9:00-15:00
+"4040 Cumberland Parkway, Smyrna, GA 30080",8,Bulk Items,8:00-12:00
+"5050 Paces Ferry Road, Vinings, GA 30339",9,Medical Supplies,9:00-16:00

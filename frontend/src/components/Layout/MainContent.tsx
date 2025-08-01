@@ -21,7 +21,7 @@ const MainContent: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-background">
       {renderContent()}
     </div>
   );
