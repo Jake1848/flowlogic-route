@@ -1,31 +1,57 @@
 import React, { useState } from 'react';
-import { useAppStore } from '../../store/useAppStore';
 import { X, Download, FileText, Image, CheckCircle } from 'lucide-react';
 import { cn } from '../../utils/cn';
-import { useExport } from '../../hooks/useExport';
 import toast from 'react-hot-toast';
+import Papa from 'papaparse';
 
-const ExportModal: React.FC = () => {
+interface ExportModalProps {
+  onClose: () => void;
+  routes: any[];
+  routingSummary: string;
+}
+
+const ExportModal: React.FC<ExportModalProps> = ({ onClose, routes, routingSummary }) => {
   const [format, setFormat] = useState<'csv' | 'pdf'>('csv');
   const [includeMap, setIncludeMap] = useState(true);
   const [includeSummary, setIncludeSummary] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   
-  const { setShowExportModal, currentRoutes } = useAppStore();
-  const { exportRoutes } = useExport();
+  // Component not using store anymore - using props instead
+  const currentRoutes = routes;
 
   const handleExport = async () => {
     setIsExporting(true);
     
     try {
-      await exportRoutes({
-        format,
-        includeMap,
-        includeSummary
-      });
+      if (format === 'csv') {
+        // Simple CSV export
+        const csvData = currentRoutes.map(route => [
+          route.truck_id || 'Unknown',
+          route.stops?.length || 0,
+          route.total_miles?.toFixed(1) || '0',
+          route.total_time_hours?.toFixed(1) || '0'
+        ]);
+        csvData.unshift(['Truck ID', 'Stops', 'Miles', 'Hours']);
+        
+        const csv = Papa.unparse(csvData);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `routes_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        toast.error('PDF export not implemented yet');
+        return;
+      }
       
       toast.success(`Routes exported as ${format.toUpperCase()}`);
-      setShowExportModal(false);
+      onClose();
     } catch (error) {
       toast.error('Export failed. Please try again.');
       console.error('Export error:', error);
@@ -44,7 +70,7 @@ const ExportModal: React.FC = () => {
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Export Routes</h2>
           <button
-            onClick={() => setShowExportModal(false)}
+            onClick={() => onClose()}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-5 w-5" />
@@ -185,7 +211,7 @@ const ExportModal: React.FC = () => {
         {/* Footer */}
         <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
           <button
-            onClick={() => setShowExportModal(false)}
+            onClick={() => onClose()}
             className="px-4 py-2 text-gray-700 hover:text-gray-900 transition-colors"
             disabled={isExporting}
           >
