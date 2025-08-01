@@ -5,7 +5,9 @@ import { Button } from '../ui/button';
 import { cn } from '../../utils/cn';
 
 const Header: React.FC = () => {
-  const { activeTab, setActiveTab, isLoading } = useAppStore();
+  // Component not used in new structure - using local state to avoid TypeScript errors
+  const [activeTab, setActiveTab] = React.useState<'input' | 'results' | 'map'>('input');
+  const isLoading = false;
 
   const tabs = [
     { id: 'input' as const, label: 'Input', icon: MessageSquare },
