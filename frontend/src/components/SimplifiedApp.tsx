@@ -17,17 +17,19 @@ const SimplifiedApp: React.FC = () => {
   const {
     addresses,
     setAddresses,
-    constraints,
-    setConstraints,
+    specialInstructions,
+    setSpecialInstructions,
     depotAddress,
     setDepotAddress,
-    csvFile,
-    setCsvFile,
-    isLoading,
-    currentRoutes
+    routes
   } = useAppStore();
   
-  const { performAutonomousRouting } = useRouting();
+  // Local state for CSV and loading since they're not in the new store
+  const [csvFile, setCsvFile] = React.useState<File | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const currentRoutes = routes;
+  
+  const { generateRoutes, isLoading: routingLoading } = useRouting();
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -48,7 +50,7 @@ const SimplifiedApp: React.FC = () => {
     }
 
     try {
-      await performAutonomousRouting(addresses, constraints, depotAddress);
+      await generateRoutes();
     } catch (error) {
       console.error('Routing error:', error);
     }
@@ -198,8 +200,8 @@ Example:
                     Special Instructions
                   </label>
                   <Textarea
-                    value={constraints}
-                    onChange={(e) => setConstraints(e.target.value)}
+                    value={specialInstructions}
+                    onChange={(e) => setSpecialInstructions(e.target.value)}
                     placeholder="e.g., 'Avoid highways during rush hour' or 'Deliver frozen goods first'"
                     className="min-h-[80px]"
                     disabled={isLoading}
