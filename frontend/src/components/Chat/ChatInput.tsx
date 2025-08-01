@@ -1,114 +1,87 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '../../store/useAppStore';
-import { Send, Bot, User, Sparkles } from 'lucide-react';
+import { Send, Bot, User } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { Button } from '../ui/button';
-import { ChatMessage } from '../../types';
 import { useRouting } from '../../hooks/useRouting';
 
 const ChatInput: React.FC = () => {
   const [input, setInput] = useState('');
+  const [chatHistory, setChatHistory] = useState<Array<{id: string, type: 'user' | 'assistant', content: string}>>([]);
   const [isTyping, setIsTyping] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { 
-    chatHistory, 
-    addChatMessage, 
-    constraints, 
-    setConstraints,
-    isLoading
+    specialInstructions,
+    setSpecialInstructions,
   } = useAppStore();
   
-  const { performAutonomousRouting } = useRouting();
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [chatHistory]);
+  const { generateRoutes, isLoading } = useRouting();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: ChatMessage = {
+    const userMessage = {
       id: Date.now().toString(),
-      type: 'user',
-      content: input,
-      timestamp: new Date(),
+      type: 'user' as const,
+      content: input.trim()
     };
 
-    addChatMessage(userMessage);
-    
-    // Update constraints if this looks like routing instructions
-    const isRoutingInstruction = /route|deliver|truck|avoid|priority|constraint/i.test(input);
-    if (isRoutingInstruction) {
-      setConstraints(constraints ? `${constraints}\n${input}` : input);
-    }
-
+    setChatHistory(prev => [...prev, userMessage]);
+    setSpecialInstructions(input.trim());
     setInput('');
-    setIsTyping(true);
 
-    // Simulate AI thinking time
+    // Simulate AI response
+    setIsTyping(true);
     setTimeout(() => {
-      const assistantMessage: ChatMessage = {
+      const response = getAutomatedResponse(input.trim());
+      setChatHistory(prev => [...prev, {
         id: (Date.now() + 1).toString(),
-        type: 'assistant',
-        content: generateAIResponse(input),
-        timestamp: new Date(),
-      };
-      
-      addChatMessage(assistantMessage);
+        type: 'assistant' as const,
+        content: response
+      }]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 2000);
+    }, 1000);
   };
 
-  const generateAIResponse = (userInput: string): string => {
-    const input = userInput.toLowerCase();
-    
-    // Route generation requests
-    if (input.includes('route') || input.includes('optimize') || input.includes('plan')) {
-      return "I'll help you generate optimal routes! Please provide the delivery addresses in the address input below, and I'll apply your routing constraints automatically.";
-    }
+  const getAutomatedResponse = (input: string): string => {
+    const lowerInput = input.toLowerCase();
     
     // Constraint acknowledgments
-    if (input.includes('avoid') || input.includes('priority') || input.includes('first') || input.includes('last')) {
+    if (lowerInput.includes('avoid') || lowerInput.includes('priority') || lowerInput.includes('first') || lowerInput.includes('last')) {
       return "Got it! I've noted your routing constraint. When you generate routes, I'll make sure to apply this rule to optimize your delivery sequence.";
     }
-    
+
     // Time-related constraints
-    if (input.includes('time') || input.includes('hour') || input.includes('morning') || input.includes('afternoon')) {
+    if (lowerInput.includes('time') || lowerInput.includes('hour') || lowerInput.includes('morning') || lowerInput.includes('afternoon')) {
       return "Time constraint understood! I'll factor in your timing preferences when generating routes and estimating delivery windows.";
     }
-    
+
     // Cost optimization
-    if (input.includes('cost') || input.includes('fuel') || input.includes('save') || input.includes('budget')) {
+    if (lowerInput.includes('cost') || lowerInput.includes('fuel') || lowerInput.includes('save') || lowerInput.includes('budget')) {
       return "I'll optimize for cost efficiency! This includes minimizing fuel costs, reducing total miles, and maximizing truck utilization.";
     }
-    
+
     // Geographic constraints
-    if (input.includes('highway') || input.includes('downtown') || input.includes('area') || input.includes('zone')) {
+    if (lowerInput.includes('highway') || lowerInput.includes('downtown') || lowerInput.includes('area') || lowerInput.includes('zone')) {
       return "Geographic constraint noted! I'll make sure to respect your area preferences and route restrictions during optimization.";
     }
-    
+
     // Truck/fleet related
-    if (input.includes('truck') || input.includes('vehicle') || input.includes('fleet')) {
+    if (lowerInput.includes('truck') || lowerInput.includes('vehicle') || lowerInput.includes('fleet')) {
       return "Fleet constraint recorded! I'll automatically generate an appropriate truck fleet or apply your specific vehicle requirements.";
     }
-    
+
     // Default helpful response
-    return "I understand! Feel free to describe any routing constraints or preferences in natural language. I can handle complex instructions like 'avoid highways during rush hour' or 'deliver frozen goods first'.";
+    return "I've recorded your constraint. These preferences will be applied when optimizing your routes to ensure the best possible delivery sequence.";
   };
 
   const quickPrompts = [
     "Avoid highways during rush hour",
-    "Deliver frozen goods first",
-    "Keep routes under 150 miles",
-    "Complete all deliveries by 3 PM",
+    "Prioritize refrigerated deliveries first", 
+    "Keep routes under 8 hours each",
     "Minimize fuel costs",
-    "Use refrigerated trucks only"
+    "Stay within city limits"
   ];
 
   return (
@@ -123,13 +96,13 @@ const ChatInput: React.FC = () => {
             </p>
           </div>
         )}
-        
+
         {chatHistory.map((message) => (
           <div
             key={message.id}
             className={cn(
-              "flex items-start space-x-2 animate-fade-in",
-              message.type === 'user' ? "justify-end" : "justify-start"
+              "flex items-start space-x-2",
+              message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
             )}
           >
             {message.type === 'assistant' && (
@@ -137,7 +110,7 @@ const ChatInput: React.FC = () => {
                 <Bot className="h-3 w-3 text-primary" />
               </div>
             )}
-            
+
             <div
               className={cn(
                 "max-w-[80%] px-3 py-2 rounded-lg text-sm",
@@ -148,7 +121,7 @@ const ChatInput: React.FC = () => {
             >
               {message.content}
             </div>
-            
+
             {message.type === 'user' && (
               <div className="w-6 h-6 bg-muted rounded-full flex items-center justify-center flex-shrink-0">
                 <User className="h-3 w-3 text-muted-foreground" />
@@ -156,7 +129,7 @@ const ChatInput: React.FC = () => {
             )}
           </div>
         ))}
-        
+
         {isTyping && (
           <div className="flex items-start space-x-2">
             <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
@@ -171,10 +144,8 @@ const ChatInput: React.FC = () => {
             </div>
           </div>
         )}
-        
-        <div ref={messagesEndRef} />
       </div>
-      
+
       {/* Quick prompts */}
       {chatHistory.length === 0 && (
         <div className="px-3 pb-2">
@@ -194,7 +165,7 @@ const ChatInput: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {/* Input form */}
       <form onSubmit={handleSubmit} className="p-3 border-t border-border">
         <div className="flex space-x-2">
