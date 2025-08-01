@@ -297,7 +297,13 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({ routes, routingSummary 
       </div>
 
       {/* Export Modal */}
-      {showExportModal && <ExportModal />}
+      {showExportModal && (
+        <ExportModal 
+          onClose={() => setShowExportModal(false)}
+          routes={routes}
+          routingSummary={routingSummary}
+        />
+      )}
     </div>
   );
 };
