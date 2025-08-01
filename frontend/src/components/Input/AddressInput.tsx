@@ -15,14 +15,14 @@ const AddressInput: React.FC = () => {
   const {
     addresses,
     setAddresses,
-    constraints,
-    setConstraints,
+    specialInstructions,
+    setSpecialInstructions,
     depotAddress,
-    setDepotAddress,
-    csvFile,
-    setCsvFile,
-    isLoading
+    setDepotAddress
   } = useAppStore();
+  
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const isLoading = false;
   
   const { performAutonomousRouting } = useRouting();
 
@@ -56,7 +56,7 @@ const AddressInput: React.FC = () => {
     }
 
     try {
-      await performAutonomousRouting(addresses, constraints, depotAddress);
+      await performAutonomousRouting(addresses, specialInstructions, depotAddress);
     } catch (error) {
       console.error('Routing error:', error);
     }
@@ -208,8 +208,8 @@ Example:
             Additional Constraints
           </label>
           <Textarea
-            value={constraints}
-            onChange={(e) => setConstraints(e.target.value)}
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
             placeholder="e.g., 'Avoid highways during rush hour' or 'Deliver frozen goods first'"
             className="min-h-[64px] resize-none"
             disabled={isLoading}
