@@ -6,7 +6,8 @@ import { Bot, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 const Sidebar: React.FC = () => {
-  const { activeTab } = useAppStore();
+  // Component not used in new structure - using local state to avoid TypeScript errors
+  const activeTab = 'input';
 
   if (activeTab !== 'input') {
     return null;
