@@ -1,19 +1,19 @@
-import React from 'react';
-import { useAppStore } from '../../store/useAppStore';
+import React, { useState } from 'react';
 import { Download, FileText, Map, Truck, Clock, DollarSign, BarChart3, AlertTriangle } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import ExportModal from './ExportModal';
+import { TruckRoute } from '../../types';
 
-const ResultsSummary: React.FC = () => {
-  const { 
-    currentRoutes, 
-    routingSummary, 
-    setShowExportModal, 
-    showExportModal,
-    setActiveTab 
-  } = useAppStore();
+interface ResultsSummaryProps {
+  routes: TruckRoute[];
+  routingSummary: string;
+}
+
+const ResultsSummary: React.FC<ResultsSummaryProps> = ({ routes, routingSummary }) => {
+  const [showExportModal, setShowExportModal] = useState(false);
+  const currentRoutes = routes;
 
   if (!currentRoutes.length) {
     return (
@@ -22,7 +22,7 @@ const ResultsSummary: React.FC = () => {
           <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">No Routes Generated</h3>
           <p className="text-muted-foreground mb-4">Create routes to see detailed analysis and recommendations.</p>
-          <Button onClick={() => setActiveTab('input')}>
+          <Button onClick={() => window.location.reload()}>
             Start Planning Routes
           </Button>
         </div>
@@ -55,7 +55,7 @@ const ResultsSummary: React.FC = () => {
           <div className="flex space-x-3">
             <Button
               variant="outline"
-              onClick={() => setActiveTab('map')}
+              onClick={() => {/* Map view handled by parent component */}}
               className="flex items-center space-x-2"
             >
               <Map className="h-4 w-4" />
