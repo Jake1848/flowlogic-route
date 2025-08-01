@@ -132,7 +132,7 @@ Example:
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setAddresses(exampleAddresses)}
+            onClick={() => setAddresses(convertTextToAddresses(exampleAddresses))}
             disabled={isLoading}
             className="text-xs text-muted-foreground hover:text-foreground"
           >
