@@ -26,6 +26,20 @@ const AddressInput: React.FC = () => {
   
   const { generateRoutes } = useRouting();
 
+  const convertTextToAddresses = (text: string) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    return lines.map((line) => ({
+      Address: line.trim(),
+      Pallets: Math.floor(Math.random() * 10) + 1,
+      Special: 'Standard',
+      TimeWindow: '8:00-17:00'
+    }));
+  };
+
+  const convertAddressesToText = (addresses: any[]) => {
+    return addresses.map(addr => addr.Address).join('\n');
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -41,16 +55,29 @@ const AddressInput: React.FC = () => {
   const handlePasteAddresses = async () => {
     try {
       const text = await navigator.clipboard.readText();
-      setAddresses(text);
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length === 0) {
+        toast.error('No addresses found in clipboard');
+        return;
+      }
+      
+      const addressArray = lines.map((line, index) => ({
+        Address: line.trim(),
+        Pallets: Math.floor(Math.random() * 10) + 1,
+        Special: 'Standard',
+        TimeWindow: '8:00-17:00'
+      }));
+      
+      setAddresses(addressArray);
       setActiveMethod('paste');
-      toast.success('Addresses pasted from clipboard');
+      toast.success(`Pasted ${addressArray.length} addresses from clipboard`);
     } catch (error) {
       toast.error('Failed to read from clipboard');
     }
   };
 
   const handleGenerateRoutes = async () => {
-    if (!addresses.trim() && !csvFile) {
+    if (addresses.length === 0 && !csvFile) {
       toast.error('Please provide addresses or upload a CSV file');
       return;
     }
@@ -90,8 +117,8 @@ Kroger, 1045 Kane Concourse, Bay Harbor Islands, FL`;
         {/* Manual input */}
         <TabsContent value="manual" className="space-y-3">
           <Textarea
-            value={addresses}
-            onChange={(e) => setAddresses(e.target.value)}
+            value={convertAddressesToText(addresses)}
+            onChange={(e) => setAddresses(convertTextToAddresses(e.target.value))}
             placeholder="Enter delivery addresses (one per line)
 
 Example:
@@ -130,10 +157,10 @@ Example:
             </CardContent>
           </Card>
           
-          {addresses && (
+          {addresses.length > 0 && (
             <Textarea
-              value={addresses}
-              onChange={(e) => setAddresses(e.target.value)}
+              value={convertAddressesToText(addresses)}
+              onChange={(e) => setAddresses(convertTextToAddresses(e.target.value))}
               className="min-h-[96px] resize-none"
               disabled={isLoading}
             />
@@ -220,7 +247,7 @@ Example:
       {/* Generate routes button */}
       <Button
         onClick={handleGenerateRoutes}
-        disabled={(!addresses.trim() && !csvFile) || isLoading}
+        disabled={(addresses.length === 0 && !csvFile) || isLoading}
         size="lg"
         className="w-full"
       >
