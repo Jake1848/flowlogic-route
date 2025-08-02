@@ -143,7 +143,14 @@ class RoutingEngine:
                     row.append(0)
                 else:
                     dist = distance_matrix.get((locations[i], locations[j]), 50)  # Default 50 miles
-                    row.append(int(dist * 100))  # Convert to integers for OR-Tools
+                    # Ensure dist is a valid number before conversion
+                    try:
+                        if isinstance(dist, (int, float)) and dist >= 0:
+                            row.append(int(dist * 100))  # Convert to integers for OR-Tools
+                        else:
+                            row.append(5000)  # Default 50 miles * 100
+                    except (ValueError, TypeError):
+                        row.append(5000)  # Default 50 miles * 100
             matrix.append(row)
         
         # Create routing model
@@ -180,7 +187,11 @@ class RoutingEngine:
         def time_callback(from_index, to_index):
             from_node = manager.IndexToNode(from_index)
             to_node = manager.IndexToNode(to_index)
-            travel_time = int(matrix[from_node][to_node] * time_per_mile / 100)
+            try:
+                distance_value = matrix[from_node][to_node]
+                travel_time = int(distance_value * time_per_mile / 100)
+            except (ValueError, TypeError):
+                travel_time = 60  # Default 1 hour travel time
             service_time = 0 if to_node == 0 else stops[to_node - 1].service_time_minutes
             return travel_time + service_time
         
@@ -323,6 +334,9 @@ class RoutingEngine:
                 
                 stop_location = f"stop_{stop.stop_id}"
                 distance = distance_matrix.get((current_location, stop_location), 50)
+                # Ensure distance is valid before calculations
+                if not isinstance(distance, (int, float)) or distance < 0:
+                    distance = 50  # Default 50 miles
                 travel_time = distance * 60 / truck.avg_speed_mph
                 arrival_time = current_time + travel_time
                 
@@ -338,7 +352,13 @@ class RoutingEngine:
                 break
             
             # Add stop to route
-            arrival_mins = current_time + int(best_distance * 60 / truck.avg_speed_mph)
+            try:
+                if isinstance(best_distance, (int, float)) and best_distance >= 0:
+                    arrival_mins = current_time + int(best_distance * 60 / truck.avg_speed_mph)
+                else:
+                    arrival_mins = current_time + 60  # Default 1 hour travel time
+            except (ValueError, TypeError):
+                arrival_mins = current_time + 60  # Default 1 hour travel time
             arrival_time = datetime.combine(base_date, time(arrival_mins // 60, arrival_mins % 60))
             departure_time = arrival_time + timedelta(minutes=best_stop.service_time_minutes)
             
