@@ -24,14 +24,42 @@ const ExportModal: React.FC<ExportModalProps> = ({ onClose, routes, routingSumma
     
     try {
       if (format === 'csv') {
-        // Simple CSV export
-        const csvData = currentRoutes.map(route => [
-          route.truck_id || 'Unknown',
-          route.stops?.length || 0,
-          route.total_miles?.toFixed(1) || '0',
-          route.total_time_hours?.toFixed(1) || '0'
-        ]);
-        csvData.unshift(['Truck ID', 'Stops', 'Miles', 'Hours']);
+        // Enhanced CSV export with stop details
+        const csvData: any[] = [];
+        
+        // Add summary row first
+        csvData.push(['ROUTE SUMMARY']);
+        csvData.push(['Truck ID', 'Total Stops', 'Total Miles', 'Total Hours', 'Fuel Cost', 'Utilization %']);
+        
+        currentRoutes.forEach(route => {
+          csvData.push([
+            route.truck_id || 'Unknown',
+            route.stops?.length || 0,
+            route.total_miles?.toFixed(1) || '0',
+            route.total_time_hours?.toFixed(1) || '0',
+            `$${route.fuel_estimate?.toFixed(2) || '0.00'}`,
+            `${route.utilization_percent?.toFixed(1) || '0'}%`
+          ]);
+        });
+        
+        // Add stop details
+        csvData.push(['']); // Empty row
+        csvData.push(['STOP DETAILS']);
+        csvData.push(['Truck ID', 'Stop #', 'Address', 'ETA', 'Pallets', 'Time Window', 'Service Time']);
+        
+        currentRoutes.forEach(route => {
+          route.stops?.forEach((stop: any, index: number) => {
+            csvData.push([
+              route.truck_id || 'Unknown',
+              index + 1,
+              stop.address || `Stop ${stop.stop_id}`,
+              stop.eta || stop.estimated_arrival || 'N/A',
+              stop.pallets || 0,
+              `${stop.time_window_start || '08:00'} - ${stop.time_window_end || '17:00'}`,
+              `${stop.service_time_minutes || 15} min`
+            ]);
+          });
+        });
         
         const csv = Papa.unparse(csvData);
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
