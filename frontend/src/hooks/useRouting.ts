@@ -58,6 +58,12 @@ export const useRouting = () => {
 
     } catch (error: any) {
       console.error('Routing error:', error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       
       let errorMessage = 'Failed to generate routes';
       
