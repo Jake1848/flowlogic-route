@@ -44,7 +44,7 @@ export const useRouting = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: 60000,
+        timeout: 180000, // 3 minutes to handle large routing operations
       });
 
       const { routes, natural_language_summary } = response.data;
