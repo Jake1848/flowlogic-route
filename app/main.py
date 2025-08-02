@@ -13,6 +13,7 @@ from models.models import (
 )
 from utils.csv_parser import parse_stops_csv, parse_trucks_csv
 from services.routing_engine import RoutingEngine
+from enterprise_integrations import create_integration
 from services.natural_language import NaturalLanguageProcessor
 from services.fleet_generator import FleetGenerator
 
@@ -753,6 +754,152 @@ def _analyze_rerouting_impact(original_routes: List[TruckRoute],
     impact_lines.append(f"  • {affected_count} trucks required route adjustments")
     
     return "\n".join(impact_lines)
+
+
+# Enterprise Integration Endpoints
+class EnterpriseConfig(BaseModel):
+    platform: str  # "descartes", "sap_tm", "oracle_otm", "manhattan"
+    config: Dict[str, Any]
+
+class EnterpriseRouteSync(BaseModel):
+    platform: str
+    config: Dict[str, Any]
+    routes: List[Dict[str, Any]]
+
+
+@app.post("/enterprise/connect")
+async def connect_enterprise_system(request: EnterpriseConfig):
+    """Connect to an enterprise TMS platform"""
+    try:
+        integration = create_integration(request.platform, request.config)
+        
+        # Test connection by importing orders
+        orders = await integration.import_orders()
+        
+        return {
+            "success": True,
+            "platform": request.platform,
+            "imported_orders": len(orders),
+            "message": f"Successfully connected to {request.platform.upper()}",
+            "orders_preview": orders[:5] if orders else []
+        }
+        
+    except Exception as e:
+        logger.error(f"Enterprise connection error: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to connect to {request.platform}: {str(e)}")
+
+
+@app.post("/enterprise/sync-routes")
+async def sync_routes_to_enterprise(request: EnterpriseRouteSync):
+    """Sync optimized routes back to enterprise TMS"""
+    try:
+        integration = create_integration(request.platform, request.config)
+        
+        # Sync routes to external system
+        result = await integration.sync_routes(request.routes)
+        
+        if result.get("success"):
+            return {
+                "success": True,
+                "platform": request.platform,
+                "synced_routes": len(request.routes),
+                "message": result.get("message", "Routes synced successfully"),
+                "external_ids": result.get("external_ids", [])
+            }
+        else:
+            raise HTTPException(status_code=400, detail=result.get("error", "Sync failed"))
+            
+    except Exception as e:
+        logger.error(f"Enterprise sync error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync to {request.platform}: {str(e)}")
+
+
+@app.get("/enterprise/platforms")
+async def get_supported_platforms():
+    """Get list of supported enterprise platforms"""
+    return {
+        "platforms": [
+            {
+                "id": "descartes",
+                "name": "Descartes Systems",
+                "description": "Global leader in logistics software and GLN",
+                "features": ["Route optimization", "Order management", "Carrier network"],
+                "pricing": "Enterprise - Contact for pricing"
+            },
+            {
+                "id": "sap_tm",
+                "name": "SAP Transportation Management",
+                "description": "Part of SAP ERP ecosystem for transportation",
+                "features": ["ERP integration", "Global logistics", "Advanced analytics"],
+                "pricing": "$50K-$500K annually"
+            },
+            {
+                "id": "oracle_otm",
+                "name": "Oracle Transportation Management",
+                "description": "Enterprise-scale transportation planning",
+                "features": ["Multi-modal transport", "Global trade", "Optimization"],
+                "pricing": "$100K-$1M annually"
+            },
+            {
+                "id": "manhattan",
+                "name": "Manhattan Active Transportation",
+                "description": "Cloud-native supply chain platform",
+                "features": ["Real-time optimization", "AI-driven insights", "Unified platform"],
+                "pricing": "$200K-$2M annually"
+            }
+        ],
+        "flowlogic_advantages": [
+            "AI-first route optimization",
+            "10x faster implementation",
+            "90% cost reduction vs enterprise TMS",
+            "Real-time continuous optimization",
+            "Modern API-first architecture"
+        ]
+    }
+
+
+@app.post("/enterprise/import-orders")
+async def import_orders_from_enterprise(request: EnterpriseConfig):
+    """Import orders from enterprise TMS for optimization"""
+    try:
+        integration = create_integration(request.platform, request.config)
+        orders = await integration.import_orders()
+        
+        if not orders:
+            return {
+                "success": True,
+                "imported_orders": 0,
+                "message": "No pending orders found",
+                "orders": []
+            }
+        
+        # Convert imported orders to FlowLogic Stop format
+        stops = []
+        for order in orders:
+            stop = Stop(
+                stop_id=order.get("order_id", f"IMPORT_{len(stops)}"),
+                address=order.get("address", ""),
+                latitude=order.get("latitude"),
+                longitude=order.get("longitude"),
+                pallets=order.get("pallets", 1),
+                time_window_start=_parse_time_window_from_string(order.get("time_window_start", "08:00")).replace(second=0, microsecond=0) if order.get("time_window_start") else time_obj(8, 0),
+                time_window_end=_parse_time_window_from_string(order.get("time_window_end", "17:00")).replace(second=0, microsecond=0) if order.get("time_window_end") else time_obj(17, 0),
+                service_time_minutes=order.get("service_time_minutes", 15),
+                special_constraint=SpecialConstraint.NONE
+            )
+            stops.append(stop)
+        
+        return {
+            "success": True,
+            "imported_orders": len(orders),
+            "message": f"Imported {len(orders)} orders from {request.platform.upper()}",
+            "stops": [stop.dict() for stop in stops],
+            "ready_for_optimization": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Enterprise import error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to import from {request.platform}: {str(e)}")
 
 
 if __name__ == "__main__":

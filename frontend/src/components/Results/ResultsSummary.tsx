@@ -14,6 +14,13 @@ interface ResultsSummaryProps {
 const ResultsSummary: React.FC<ResultsSummaryProps> = ({ routes, routingSummary }) => {
   const [showExportModal, setShowExportModal] = useState(false);
   const currentRoutes = routes;
+  
+  // Debug logging to see actual data structure
+  console.log('ResultsSummary routes data:', routes);
+  if (routes && routes.length > 0 && routes[0].stops && routes[0].stops.length > 0) {
+    console.log('First stop data:', routes[0].stops[0]);
+    console.log('All stop keys:', Object.keys(routes[0].stops[0]));
+  }
 
   if (!currentRoutes.length) {
     return (
@@ -189,7 +196,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({ routes, routingSummary 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-foreground">
-                              {stop.address || `Stop #${stop.stop_id}`}
+                              {stop.address || stop.location || `Stop #${stop.stop_id}`}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               ETA: {stop.eta}

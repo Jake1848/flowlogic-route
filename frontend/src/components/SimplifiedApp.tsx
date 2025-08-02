@@ -4,7 +4,8 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
-import { Upload, FileText, Copy, Play, MapPin, Package, Clock } from 'lucide-react';
+import { Upload, FileText, Copy, Play, MapPin, Package, Clock, Building2 } from 'lucide-react';
+import EnterpriseIntegration from './Enterprise/EnterpriseIntegration';
 import { useRouting } from '../hooks/useRouting';
 import toast from 'react-hot-toast';
 import RouteMap from './Map/RouteMap';
@@ -300,6 +301,7 @@ Example:
               <TabsList>
                 <TabsTrigger value="summary">Summary</TabsTrigger>
                 <TabsTrigger value="map">Map View</TabsTrigger>
+                <TabsTrigger value="enterprise">Enterprise TMS</TabsTrigger>
               </TabsList>
               
               <TabsContent value="summary">
@@ -314,6 +316,15 @@ Example:
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+              
+              <TabsContent value="enterprise">
+                <EnterpriseIntegration 
+                  onOrdersImported={(orders) => {
+                    toast.success(`Imported ${orders.length} orders from enterprise system`);
+                    // Could automatically populate the addresses field here
+                  }}
+                />
               </TabsContent>
             </Tabs>
           </div>
