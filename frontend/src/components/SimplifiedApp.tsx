@@ -288,9 +288,8 @@ Example:
               <Button
                 variant="outline"
                 onClick={() => {
-                  useAppStore.getState().setCurrentRoutes([]);
-                  useAppStore.getState().setAddresses('');
-                  useAppStore.getState().setCsvFile(null);
+                  setAddresses([]);
+                  setCsvFile(null);
                 }}
               >
                 Start New Route
@@ -304,14 +303,14 @@ Example:
               </TabsList>
               
               <TabsContent value="summary">
-                <ResultsSummary />
+                <ResultsSummary routes={routes} routingSummary={""} />
               </TabsContent>
               
               <TabsContent value="map">
                 <Card>
                   <CardContent className="p-0">
                     <div className="h-[600px]">
-                      <RouteMap />
+                      <RouteMap routes={routes} />
                     </div>
                   </CardContent>
                 </Card>

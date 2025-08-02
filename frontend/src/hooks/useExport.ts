@@ -5,7 +5,8 @@ import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 
 export const useExport = () => {
-  const { currentRoutes, routingSummary } = useAppStore();
+  const { routes, routingSummary } = useAppStore();
+  const currentRoutes = routes;
 
   const exportRoutes = useCallback(async (options: ExportOptions) => {
     if (!currentRoutes.length) {
@@ -63,7 +64,7 @@ export const useExport = () => {
       
       // Split summary into manageable chunks for CSV
       const summaryLines = routingSummary.split('\n');
-      summaryLines.forEach(line => {
+      summaryLines.forEach((line: string) => {
         if (line.trim()) {
           csvData.push([line.trim()]);
         }
@@ -205,7 +206,7 @@ export const useExport = () => {
       pdf.setFont('helvetica', 'normal');
       
       const summaryLines = routingSummary.split('\n');
-      summaryLines.forEach(line => {
+      summaryLines.forEach((line: string) => {
         if (line.trim()) {
           checkNewPage(lineHeight);
           yPosition = addText(line.trim(), margin, yPosition, pageWidth - 2 * margin);

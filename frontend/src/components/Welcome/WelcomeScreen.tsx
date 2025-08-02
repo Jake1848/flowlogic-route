@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 
 const WelcomeScreen: React.FC = () => {
-  const { setActiveTab } = useAppStore();
+  // Component not used in new structure - remove store dependency
 
   const features = [
     {
@@ -76,7 +76,7 @@ const WelcomeScreen: React.FC = () => {
           
           <div className="flex justify-center space-x-4">
             <Button
-              onClick={() => setActiveTab('input')}
+              onClick={() => window.location.reload()}
               size="lg"
               className="flex items-center space-x-2"
             >
@@ -182,7 +182,7 @@ const WelcomeScreen: React.FC = () => {
               Join thousands of logistics professionals using AI to reduce costs, save time, and improve delivery efficiency.
             </p>
             <Button
-              onClick={() => setActiveTab('input')}
+              onClick={() => window.location.reload()}
               variant="secondary"
               size="lg"
             >
