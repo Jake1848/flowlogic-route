@@ -253,7 +253,17 @@ class RoutingEngine:
                 stop = stops[node - 1]
                 arrival_mins = current_time
                 
-                arrival_time = datetime.combine(base_date, time(arrival_mins // 60, arrival_mins % 60))
+                # Ensure arrival_mins is an integer for time() constructor
+                try:
+                    arrival_mins_int = int(arrival_mins) if isinstance(arrival_mins, (int, float)) else 480  # Default 8 AM
+                    hours = arrival_mins_int // 60
+                    minutes = arrival_mins_int % 60
+                    # Ensure valid time ranges
+                    hours = max(0, min(23, hours))
+                    minutes = max(0, min(59, minutes))
+                    arrival_time = datetime.combine(base_date, time(hours, minutes))
+                except (ValueError, TypeError):
+                    arrival_time = datetime.combine(base_date, time(8, 0))  # Default 8 AM
                 departure_time = arrival_time + timedelta(minutes=stop.service_time_minutes)
                 
                 prev_location = f"depot_{truck.truck_id}" if len(route_stops) == 0 else f"stop_{route_stops[-1].stop_id}"
