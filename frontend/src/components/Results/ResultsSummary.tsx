@@ -189,7 +189,7 @@ const ResultsSummary: React.FC<ResultsSummaryProps> = ({ routes, routingSummary 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-foreground">
-                              Stop #{stop.stop_id}
+                              {stop.address || `Stop #${stop.stop_id}`}
                             </span>
                             <span className="text-xs text-muted-foreground">
                               ETA: {stop.eta}

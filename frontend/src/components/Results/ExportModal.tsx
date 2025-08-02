@@ -74,8 +74,84 @@ const ExportModal: React.FC<ExportModalProps> = ({ onClose, routes, routingSumma
         link.click();
         document.body.removeChild(link);
       } else {
-        toast.error('PDF export not implemented yet');
-        return;
+        // PDF export using simple HTML to PDF approach
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+          toast.error('Please allow popups to export PDF');
+          return;
+        }
+        
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>FlowLogic Route Report</title>
+            <style>
+              body { font-family: Arial, sans-serif; margin: 20px; }
+              .header { text-align: center; margin-bottom: 30px; }
+              .summary { background: #f5f5f5; padding: 15px; margin-bottom: 20px; }
+              .route { margin-bottom: 30px; }
+              .route h3 { color: #333; border-bottom: 2px solid #007bff; }
+              .stop { margin: 10px 0; padding: 10px; background: #f9f9f9; }
+              table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+              th { background-color: #f2f2f2; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>FlowLogic Route Optimization Report</h1>
+              <p>Generated on ${new Date().toLocaleDateString()}</p>
+            </div>
+            
+            <div class="summary">
+              <h2>Executive Summary</h2>
+              <table>
+                <tr><th>Total Routes</th><td>${currentRoutes.length}</td></tr>
+                <tr><th>Total Stops</th><td>${totalStops}</td></tr>
+                <tr><th>Total Distance</th><td>${totalMiles.toFixed(1)} miles</td></tr>
+                <tr><th>Total Fuel Cost</th><td>$${currentRoutes.reduce((sum, route) => sum + route.fuel_estimate, 0).toFixed(2)}</td></tr>
+              </table>
+            </div>
+            
+            ${currentRoutes.map(route => `
+              <div class="route">
+                <h3>Truck ${route.truck_id} - ${route.stops.length} Stops</h3>
+                <p><strong>Distance:</strong> ${route.total_miles.toFixed(1)} mi | 
+                   <strong>Time:</strong> ${route.total_time_hours.toFixed(1)}h | 
+                   <strong>Fuel:</strong> $${route.fuel_estimate.toFixed(2)} | 
+                   <strong>Utilization:</strong> ${route.utilization_percent}%</p>
+                
+                <h4>Stop Details:</h4>
+                ${route.stops.map((stop, index) => `
+                  <div class="stop">
+                    <strong>${index + 1}. ${stop.address || `Stop #${stop.stop_id}`}</strong><br>
+                    ETA: ${stop.eta} | Pallets: ${stop.pallets} | 
+                    Window: ${stop.time_window_start} - ${stop.time_window_end}
+                    ${stop.notes ? `<br><em>${stop.notes}</em>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            `).join('')}
+            
+            ${includeSummary && routingSummary ? `
+              <div class="summary">
+                <h2>AI Analysis & Recommendations</h2>
+                <pre style="white-space: pre-wrap; font-family: inherit;">${routingSummary}</pre>
+              </div>
+            ` : ''}
+          </body>
+          </html>
+        `;
+        
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        printWindow.focus();
+        
+        // Give the content time to load before printing
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
       }
       
       toast.success(`Routes exported as ${format.toUpperCase()}`);
