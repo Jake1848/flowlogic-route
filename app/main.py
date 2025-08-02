@@ -308,17 +308,13 @@ async def autonomous_routing(request: AutoRoutingRequest):
         
         routing_time = time.time() - start_time
         
-        response = RoutingResponse(
-            routes=routes_list,
-            unassigned_stops=unassigned_stops,
-            total_miles=round(total_miles, 1),
-            total_fuel_cost=round(total_fuel_cost, 2),
-            average_utilization=round(avg_utilization, 1),
-            routing_time_seconds=round(routing_time, 2),
-            natural_language_summary=f"🤖 AUTONOMOUS ROUTING COMPLETE:\n\n{summary}\n\n🧠 AI INSIGHTS:\n{auto_insights}"
-        )
+        # Return simplified format that frontend expects
+        simplified_response = {
+            "routes": routes_list,
+            "natural_language_summary": f"🤖 AUTONOMOUS ROUTING COMPLETE:\n\n{summary}\n\n🧠 AI INSIGHTS:\n{auto_insights}"
+        }
         
-        return response
+        return simplified_response
         
     except HTTPException:
         raise
