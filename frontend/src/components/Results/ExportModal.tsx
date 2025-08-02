@@ -123,7 +123,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ onClose, routes, routingSumma
                    <strong>Utilization:</strong> ${route.utilization_percent}%</p>
                 
                 <h4>Stop Details:</h4>
-                ${route.stops.map((stop, index) => `
+                ${route.stops.map((stop: any, index: number) => `
                   <div class="stop">
                     <strong>${index + 1}. ${stop.address || `Stop #${stop.stop_id}`}</strong><br>
                     ETA: ${stop.eta} | Pallets: ${stop.pallets} | 
