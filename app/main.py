@@ -220,6 +220,7 @@ async def autonomous_routing(request: AutoRoutingRequest):
     start_time = time.time()
     
     try:
+        logger.info(f"🤖 Received request: addresses={request.addresses[:200]}, constraints={request.constraints}, depot={request.depot_address}")
         logger.info(f"🤖 Starting autonomous routing for addresses: {request.addresses[:100]}...")
         
         # Step 1: Parse addresses using AI
@@ -322,7 +323,9 @@ async def autonomous_routing(request: AutoRoutingRequest):
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
         logger.error(f"Autonomous routing error: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Autonomous routing failed: {str(e)}")
 
 
