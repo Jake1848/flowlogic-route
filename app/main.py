@@ -13,7 +13,7 @@ from models.models import (
 )
 from utils.csv_parser import parse_stops_csv, parse_trucks_csv
 from services.routing_engine import RoutingEngine
-from enterprise_integrations import create_integration
+from app.enterprise_integrations import create_integration
 from services.natural_language import NaturalLanguageProcessor
 from services.fleet_generator import FleetGenerator
 
