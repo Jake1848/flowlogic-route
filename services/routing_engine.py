@@ -65,15 +65,23 @@ class RoutingEngine:
     
     def _geocode_locations(self, stops: List[Stop], trucks: List[Truck]):
         """Geocode all stop and depot addresses"""
+        logger.info(f"Geocoding {len(stops)} stops and {len(trucks)} trucks")
+        
         for stop in stops:
             coords = self.geocoding_service.geocode_address(stop.address)
             if coords:
                 stop.latitude, stop.longitude = coords
+                logger.info(f"Stop {stop.stop_id} geocoded to {coords}")
+            else:
+                logger.warning(f"Failed to geocode stop {stop.stop_id}: {stop.address}")
         
         for truck in trucks:
             coords = self.geocoding_service.geocode_address(truck.depot_address)
             if coords:
                 truck.depot_latitude, truck.depot_longitude = coords
+                logger.info(f"Truck {truck.truck_id} depot geocoded to {coords}")
+            else:
+                logger.warning(f"Failed to geocode truck {truck.truck_id} depot: {truck.depot_address}")
     
     def _create_full_distance_matrix(self, stops: List[Stop], trucks: List[Truck]) -> Dict[Tuple[str, str], float]:
         """Create distance matrix for all locations"""

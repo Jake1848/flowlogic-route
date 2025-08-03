@@ -20,7 +20,7 @@ class GeocodingService:
             if address in self._cache:
                 return self._cache[address]
             
-            time.sleep(1)  # Rate limiting for Nominatim
+            time.sleep(0.5)  # Rate limiting for Nominatim
             location = self.geolocator.geocode(address)
             
             if location:

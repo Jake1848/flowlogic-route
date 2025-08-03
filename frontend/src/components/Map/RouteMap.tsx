@@ -6,6 +6,7 @@ import { TruckRoute } from '../../types';
 
 // Set Mapbox access token
 mapboxgl.accessToken = process.env.REACT_APP_MAPBOX_TOKEN || '';
+console.log('Mapbox token:', mapboxgl.accessToken ? 'Token is set' : 'NO TOKEN!');
 
 interface RouteMapProps {
   routes: TruckRoute[];
@@ -38,31 +39,46 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
   ];
 
   useEffect(() => {
-    if (!mapContainerRef.current || !mapboxgl.accessToken) return;
+    if (!mapContainerRef.current || !mapboxgl.accessToken) {
+      console.log('Map init check:', {
+        container: !!mapContainerRef.current,
+        token: !!mapboxgl.accessToken
+      });
+      return;
+    }
 
-    // Initialize map
-    const map = new mapboxgl.Map({
-      container: mapContainerRef.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-98.5795, 39.8283], // Center of USA
-      zoom: 4,
-    });
+    try {
+      // Initialize map
+      const map = new mapboxgl.Map({
+        container: mapContainerRef.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: [-98.5795, 39.8283], // Center of USA
+        zoom: 4,
+      });
 
-    mapRef.current = map;
+      mapRef.current = map;
 
-    map.on('load', () => {
-      setMapLoaded(true);
-      
-      // Add navigation controls
-      map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-      
-      // Add scale control
-      map.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
-    });
+      map.on('load', () => {
+        console.log('Map loaded successfully');
+        setMapLoaded(true);
+        
+        // Add navigation controls
+        map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+        
+        // Add scale control
+        map.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
+      });
 
-    return () => {
-      map.remove();
-    };
+      map.on('error', (e) => {
+        console.error('Map error:', e);
+      });
+
+      return () => {
+        map.remove();
+      };
+    } catch (error) {
+      console.error('Map initialization failed:', error);
+    }
   }, []);
 
   useEffect(() => {
