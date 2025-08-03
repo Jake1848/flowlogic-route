@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin, Navigation, Truck, AlertCircle, Layers } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { TruckRoute } from '../../types';
@@ -52,14 +53,17 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
     }
 
     try {
-      // Initialize map
+      // Initialize map with minimal config
+      console.log('Creating Mapbox GL map...');
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: 'mapbox://styles/mapbox/streets-v11',
         center: [-84.3880, 33.7490], // Atlanta, GA (default)
         zoom: 10,
-        attributionControl: false,
+        accessToken: mapboxgl.accessToken,
       });
+      
+      console.log('Map instance created:', map);
 
       mapRef.current = map;
 
@@ -67,16 +71,15 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
         console.log('Map loaded successfully');
         setMapLoaded(true);
         
-        // Add navigation controls
-        map.addControl(new mapboxgl.NavigationControl(), 'top-right');
-        
-        // Add scale control
-        map.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
-        
-        // Add a test marker to ensure map is visible
-        new mapboxgl.Marker({ color: 'red' })
-          .setLngLat([-84.3880, 33.7490])
-          .addTo(map);
+        // Add a simple test marker
+        try {
+          const marker = new mapboxgl.Marker({ color: 'red' })
+            .setLngLat([-84.3880, 33.7490])
+            .addTo(map);
+          console.log('Test marker added:', marker);
+        } catch (err) {
+          console.error('Error adding marker:', err);
+        }
       });
 
       map.on('error', (e) => {
