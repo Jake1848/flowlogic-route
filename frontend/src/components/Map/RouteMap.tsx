@@ -17,6 +17,7 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
   const [showLayers, setShowLayers] = useState(false);
   const [activeLayer, setActiveLayer] = useState('routes');
   
@@ -39,11 +40,14 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
   ];
 
   useEffect(() => {
+    console.log('Map initialization attempt:', {
+      container: !!mapContainerRef.current,
+      token: !!mapboxgl.accessToken,
+      tokenValue: mapboxgl.accessToken ? 'Token set' : 'NO TOKEN'
+    });
+    
     if (!mapContainerRef.current || !mapboxgl.accessToken) {
-      console.log('Map init check:', {
-        container: !!mapContainerRef.current,
-        token: !!mapboxgl.accessToken
-      });
+      console.error('Map initialization failed - missing requirements');
       return;
     }
 
@@ -51,9 +55,10 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
       // Initialize map
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
+        style: 'mapbox://styles/mapbox/streets-v11',
         center: [-84.3880, 33.7490], // Atlanta, GA (default)
         zoom: 10,
+        attributionControl: false,
       });
 
       mapRef.current = map;
@@ -76,13 +81,21 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
 
       map.on('error', (e) => {
         console.error('Map error:', e);
+        setMapError(`Map loading failed: ${e.error?.message || 'Unknown error'}`);
+      });
+
+      map.on('style.load', () => {
+        console.log('Map style loaded successfully');
       });
 
       return () => {
-        map.remove();
+        if (map) {
+          map.remove();
+        }
       };
     } catch (error) {
       console.error('Map initialization failed:', error);
+      setMapError(`Map initialization failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }, []);
 
@@ -258,6 +271,28 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
     );
   }
 
+  if (mapError) {
+    return (
+      <div className="h-full flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Map Error</h3>
+          <p className="text-gray-600">{mapError}</p>
+          <button 
+            onClick={() => {
+              setMapError(null);
+              setMapLoaded(false);
+              window.location.reload();
+            }}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentRoutes.length) {
     return (
       <div className="h-full flex items-center justify-center bg-gray-50">
@@ -278,10 +313,21 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
 
   return (
     <div className="h-full relative bg-gray-100">
+      {/* Loading overlay */}
+      {!mapLoaded && !mapError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+            <span className="text-sm text-gray-600">Loading map...</span>
+          </div>
+        </div>
+      )}
+      
       {/* Map container */}
       <div 
         ref={mapContainerRef}
         className="w-full h-full"
+        style={{ minHeight: '400px', position: 'relative' }}
       />
 
       {/* Map controls */}
