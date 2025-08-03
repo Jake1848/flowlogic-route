@@ -25,6 +25,24 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
   const [showOverview, setShowOverview] = useState(true);
   const [showLegend, setShowLegend] = useState(true);
   const [truckPositions, setTruckPositions] = useState<{[truckId: string]: {lat: number, lng: number, heading: number}}>({});
+
+  // Handle escape key to exit fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        // Switch back to summary tab
+        const summaryButton = document.querySelector('[data-value="summary"]') as HTMLButtonElement;
+        if (summaryButton) {
+          summaryButton.click();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isFullscreen]);
   
   const currentRoutes = routes;
   const isLoading = false;
@@ -440,6 +458,23 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
 
       {/* Map controls */}
       <div className="absolute top-4 right-4 flex flex-col space-y-2">
+        {/* Close button (fullscreen only) */}
+        {isFullscreen && (
+          <button
+            onClick={() => {
+              const summaryButton = document.querySelector('[data-value="summary"]') as HTMLButtonElement;
+              if (summaryButton) {
+                summaryButton.click();
+              }
+            }}
+            className="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg flex items-center space-x-2 transition-colors"
+            title="Exit Fullscreen (ESC)"
+          >
+            <span className="text-lg">✕</span>
+            <span className="text-sm font-medium">Close Map</span>
+          </button>
+        )}
+
         {/* Layer toggle */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <button
