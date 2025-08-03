@@ -308,14 +308,10 @@ Example:
                 <ResultsSummary routes={routes} routingSummary={""} />
               </TabsContent>
               
-              <TabsContent value="map">
-                <Card>
-                  <CardContent className="p-0">
-                    <div className="h-[600px]">
-                      <RouteMap routes={routes} />
-                    </div>
-                  </CardContent>
-                </Card>
+              <TabsContent value="map" className="h-[calc(100vh-200px)]">
+                <div className="h-full">
+                  <RouteMap routes={routes} />
+                </div>
               </TabsContent>
               
               <TabsContent value="enterprise">

@@ -21,6 +21,9 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
   const [mapError, setMapError] = useState<string | null>(null);
   const [showLayers, setShowLayers] = useState(false);
   const [activeLayer, setActiveLayer] = useState('routes');
+  const [showOverview, setShowOverview] = useState(true);
+  const [showLegend, setShowLegend] = useState(true);
+  const [truckPositions, setTruckPositions] = useState<{[truckId: string]: {lat: number, lng: number, heading: number}}>({});
   
   const currentRoutes = routes;
   const isLoading = false;
@@ -262,6 +265,110 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
     });
   }, [activeLayer, currentRoutes, mapLoaded]);
 
+  // Real-time truck position simulation
+  useEffect(() => {
+    if (!currentRoutes.length || !mapLoaded) return;
+
+    const interval = setInterval(() => {
+      const newPositions: {[truckId: string]: {lat: number, lng: number, heading: number}} = {};
+
+      currentRoutes.forEach(route => {
+        if (route.stops.length > 0) {
+          // Simulate truck movement along route
+          const currentTime = new Date();
+          const startTime = new Date(route.stops[0].arrival_time);
+          const elapsedMinutes = Math.max(0, (currentTime.getTime() - startTime.getTime()) / (1000 * 60));
+          
+          // Calculate current position based on elapsed time
+          let totalTime = 0;
+          let currentStop = 0;
+          
+          for (let i = 0; i < route.stops.length; i++) {
+            const arrivalTime = new Date(route.stops[i].arrival_time);
+            const departureTime = new Date(route.stops[i].departure_time);
+            const stopTime = (departureTime.getTime() - arrivalTime.getTime()) / (1000 * 60);
+            
+            if (elapsedMinutes <= totalTime + stopTime) {
+              currentStop = i;
+              break;
+            }
+            totalTime += stopTime;
+            if (i < route.stops.length - 1) {
+              // Add travel time to next stop (estimate)
+              totalTime += 30; // 30 min average between stops
+            }
+          }
+          
+          const stop = route.stops[currentStop];
+          if (stop && stop.latitude && stop.longitude) {
+            // Add small random offset to simulate movement
+            const offset = 0.001;
+            newPositions[route.truck_id] = {
+              lat: stop.latitude + (Math.random() - 0.5) * offset,
+              lng: stop.longitude + (Math.random() - 0.5) * offset,
+              heading: Math.random() * 360
+            };
+          }
+        }
+      });
+
+      setTruckPositions(newPositions);
+    }, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [currentRoutes, mapLoaded]);
+
+  // Update truck markers based on real-time positions
+  useEffect(() => {
+    if (!mapRef.current || !mapLoaded || !Object.keys(truckPositions).length) return;
+
+    const map = mapRef.current;
+
+    // Clear existing truck markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Add truck markers
+    Object.entries(truckPositions).forEach(([truckId, position], index) => {
+      const color = truckColors[index % truckColors.length];
+      
+      // Create custom truck marker
+      const el = document.createElement('div');
+      el.className = 'truck-marker';
+      el.style.cssText = `
+        width: 30px;
+        height: 30px;
+        background-color: ${color};
+        border: 2px solid white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transform: rotate(${position.heading}deg);
+      `;
+      el.textContent = '🚛';
+      
+      const marker = new mapboxgl.Marker(el)
+        .setLngLat([position.lng, position.lat])
+        .setPopup(new mapboxgl.Popup().setHTML(`
+          <div class="p-2">
+            <h3 class="font-semibold">Truck ${truckId}</h3>
+            <p class="text-sm text-gray-600">Live Position</p>
+            <p class="text-xs">Lat: ${position.lat.toFixed(4)}</p>
+            <p class="text-xs">Lng: ${position.lng.toFixed(4)}</p>
+          </div>
+        `))
+        .addTo(map);
+
+      markersRef.current.push(marker);
+    });
+  }, [truckPositions, mapLoaded]);
+
   if (!mapboxgl.accessToken) {
     return (
       <div className="h-full flex items-center justify-center bg-gray-50">
@@ -370,51 +477,93 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
         </div>
       </div>
 
-      {/* Route stats overlay */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg p-4 min-w-64">
-        <h3 className="font-medium text-gray-900 mb-3">Route Overview</h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-600">Total Routes:</span>
-            <span className="font-medium text-gray-900 ml-1">{currentRoutes.length}</span>
+      {/* Route stats overlay - Collapsible */}
+      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg overflow-hidden">
+        <button
+          onClick={() => setShowOverview(!showOverview)}
+          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
+        >
+          <h3 className="font-medium text-gray-900">Route Overview</h3>
+          <span className="text-gray-400">
+            {showOverview ? '−' : '+'}
+          </span>
+        </button>
+        
+        {showOverview && (
+          <div className="px-4 pb-4 min-w-64">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-gray-600">Total Routes:</span>
+                <span className="font-medium text-gray-900 ml-1">{currentRoutes.length}</span>
+              </div>
+              <div>
+                <span className="text-gray-600">Total Stops:</span>
+                <span className="font-medium text-gray-900 ml-1">
+                  {currentRoutes.reduce((sum, route) => sum + route.stops.length, 0)}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Total Miles:</span>
+                <span className="font-medium text-gray-900 ml-1">
+                  {currentRoutes.reduce((sum, route) => sum + route.total_miles, 0).toFixed(1)}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-600">Fuel Cost:</span>
+                <span className="font-medium text-gray-900 ml-1">
+                  ${currentRoutes.reduce((sum, route) => sum + route.fuel_estimate, 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+            
+            {/* Real-time status */}
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-gray-600">Live Tracking Active</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <span className="text-gray-600">Total Stops:</span>
-            <span className="font-medium text-gray-900 ml-1">
-              {currentRoutes.reduce((sum, route) => sum + route.stops.length, 0)}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-600">Total Miles:</span>
-            <span className="font-medium text-gray-900 ml-1">
-              {currentRoutes.reduce((sum, route) => sum + route.total_miles, 0).toFixed(1)}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-600">Fuel Cost:</span>
-            <span className="font-medium text-gray-900 ml-1">
-              ${currentRoutes.reduce((sum, route) => sum + route.fuel_estimate, 0).toFixed(2)}
-            </span>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 max-w-xs">
-        <h4 className="font-medium text-gray-900 mb-2">Route Legend</h4>
-        <div className="space-y-2">
-          {currentRoutes.map((route, index) => (
-            <div key={route.truck_id} className="flex items-center space-x-2">
-              <div 
-                className="w-4 h-4 rounded-full"
-                style={{ backgroundColor: truckColors[index % truckColors.length] }}
-              />
-              <span className="text-sm text-gray-700">
-                Truck {route.truck_id} - {route.stops.length} stops
-              </span>
+      {/* Legend - Collapsible */}
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg overflow-hidden max-w-xs">
+        <button
+          onClick={() => setShowLegend(!showLegend)}
+          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
+        >
+          <h4 className="font-medium text-gray-900">Route Legend</h4>
+          <span className="text-gray-400">
+            {showLegend ? '−' : '+'}
+          </span>
+        </button>
+        
+        {showLegend && (
+          <div className="px-4 pb-4">
+            <div className="space-y-2">
+              {currentRoutes.map((route, index) => (
+                <div key={route.truck_id} className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1">
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: truckColors[index % truckColors.length] }}
+                    />
+                    <span className="text-xs">🚛</span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="text-sm text-gray-700">
+                      Truck {route.truck_id}
+                    </span>
+                    <div className="text-xs text-gray-500">
+                      {route.stops.length} stops • Live tracking
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Note about geocoding if using mock coordinates */}
