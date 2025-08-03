@@ -315,6 +315,12 @@ async def autonomous_routing(request: AutoRoutingRequest):
             "natural_language_summary": f"🤖 AUTONOMOUS ROUTING COMPLETE:\n\n{summary}\n\n🧠 AI INSIGHTS:\n{auto_insights}"
         }
         
+        # Debug: Check if coordinates are in the response
+        for i, route in enumerate(routes_list):
+            logger.info(f"Route {i} depot coords: {getattr(route, 'depot_latitude', None)}, {getattr(route, 'depot_longitude', None)}")
+            for j, stop in enumerate(route.stops[:2]):  # Just check first 2 stops
+                logger.info(f"Route {i} Stop {j} coords: {getattr(stop, 'latitude', None)}, {getattr(stop, 'longitude', None)}")
+        
         return simplified_response
         
     except HTTPException:

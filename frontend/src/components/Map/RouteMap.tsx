@@ -67,6 +67,18 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
 
   useEffect(() => {
     if (!mapRef.current || !mapLoaded || !currentRoutes.length) return;
+    
+    // Debug logging
+    console.log('RouteMap: Processing routes:', currentRoutes);
+    console.log('First route stops:', currentRoutes[0]?.stops);
+    console.log('First stop coordinates:', {
+      lat: currentRoutes[0]?.stops[0]?.latitude,
+      lng: currentRoutes[0]?.stops[0]?.longitude
+    });
+    console.log('First route depot coordinates:', {
+      lat: currentRoutes[0]?.depot_latitude,
+      lng: currentRoutes[0]?.depot_longitude
+    });
 
     const map = mapRef.current;
     const bounds = new mapboxgl.LngLatBounds();
