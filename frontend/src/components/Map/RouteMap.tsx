@@ -11,9 +11,10 @@ console.log('Mapbox token:', mapboxgl.accessToken ? 'Token is set' : 'NO TOKEN!'
 
 interface RouteMapProps {
   routes: TruckRoute[];
+  isFullscreen?: boolean;
 }
 
-const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
+const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -474,94 +475,163 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
         </div>
       </div>
 
-      {/* Route stats overlay - Collapsible */}
-      <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg overflow-hidden">
-        <button
-          onClick={() => setShowOverview(!showOverview)}
-          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
-        >
-          <h3 className="font-medium text-gray-900">Route Overview</h3>
-          <span className="text-gray-400">
-            {showOverview ? '−' : '+'}
-          </span>
-        </button>
-        
-        {showOverview && (
-          <div className="px-4 pb-4 min-w-64">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-600">Total Routes:</span>
-                <span className="font-medium text-gray-900 ml-1">{currentRoutes.length}</span>
+      {/* Route stats overlay - Compact in fullscreen */}
+      {isFullscreen ? (
+        <div className="absolute top-4 left-4 bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden max-w-xs">
+          <button
+            onClick={() => setShowOverview(!showOverview)}
+            className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
+          >
+            <span className="font-medium text-gray-900 text-sm">📊 Overview</span>
+            <span className="text-gray-400 text-xs">
+              {showOverview ? '−' : '+'}
+            </span>
+          </button>
+          
+          {showOverview && (
+            <div className="px-3 pb-3">
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div><span className="text-gray-600">Routes:</span> <span className="font-medium">{currentRoutes.length}</span></div>
+                <div><span className="text-gray-600">Stops:</span> <span className="font-medium">{currentRoutes.reduce((sum, route) => sum + route.stops.length, 0)}</span></div>
+                <div><span className="text-gray-600">Miles:</span> <span className="font-medium">{currentRoutes.reduce((sum, route) => sum + route.total_miles, 0).toFixed(0)}</span></div>
+                <div><span className="text-gray-600">Cost:</span> <span className="font-medium">${currentRoutes.reduce((sum, route) => sum + route.fuel_estimate, 0).toFixed(0)}</span></div>
               </div>
-              <div>
-                <span className="text-gray-600">Total Stops:</span>
-                <span className="font-medium text-gray-900 ml-1">
-                  {currentRoutes.reduce((sum, route) => sum + route.stops.length, 0)}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Total Miles:</span>
-                <span className="font-medium text-gray-900 ml-1">
-                  {currentRoutes.reduce((sum, route) => sum + route.total_miles, 0).toFixed(1)}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">Fuel Cost:</span>
-                <span className="font-medium text-gray-900 ml-1">
-                  ${currentRoutes.reduce((sum, route) => sum + route.fuel_estimate, 0).toFixed(2)}
-                </span>
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className="flex items-center space-x-1">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-gray-600">Live Tracking</span>
+                </div>
               </div>
             </div>
-            
-            {/* Real-time status */}
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-xs text-gray-600">Live Tracking Active</span>
+          )}
+        </div>
+      ) : (
+        <div className="absolute top-4 left-4 bg-white rounded-lg shadow-lg overflow-hidden">
+          <button
+            onClick={() => setShowOverview(!showOverview)}
+            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
+          >
+            <h3 className="font-medium text-gray-900">Route Overview</h3>
+            <span className="text-gray-400">
+              {showOverview ? '−' : '+'}
+            </span>
+          </button>
+          
+          {showOverview && (
+            <div className="px-4 pb-4 min-w-64">
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-gray-600">Total Routes:</span>
+                  <span className="font-medium text-gray-900 ml-1">{currentRoutes.length}</span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Total Stops:</span>
+                  <span className="font-medium text-gray-900 ml-1">
+                    {currentRoutes.reduce((sum, route) => sum + route.stops.length, 0)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Total Miles:</span>
+                  <span className="font-medium text-gray-900 ml-1">
+                    {currentRoutes.reduce((sum, route) => sum + route.total_miles, 0).toFixed(1)}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-gray-600">Fuel Cost:</span>
+                  <span className="font-medium text-gray-900 ml-1">
+                    ${currentRoutes.reduce((sum, route) => sum + route.fuel_estimate, 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+              
+              {/* Real-time status */}
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-gray-600">Live Tracking Active</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
-      {/* Legend - Collapsible */}
-      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg overflow-hidden max-w-xs">
-        <button
-          onClick={() => setShowLegend(!showLegend)}
-          className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
-        >
-          <h4 className="font-medium text-gray-900">Route Legend</h4>
-          <span className="text-gray-400">
-            {showLegend ? '−' : '+'}
-          </span>
-        </button>
-        
-        {showLegend && (
-          <div className="px-4 pb-4">
-            <div className="space-y-2">
-              {currentRoutes.map((route, index) => (
-                <div key={route.truck_id} className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-1">
+      {/* Legend - Compact in fullscreen */}
+      {isFullscreen ? (
+        <div className="absolute bottom-4 left-4 bg-white bg-opacity-90 rounded-lg shadow-lg overflow-hidden max-w-xs">
+          <button
+            onClick={() => setShowLegend(!showLegend)}
+            className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
+          >
+            <span className="font-medium text-gray-900 text-sm">🚛 Trucks</span>
+            <span className="text-gray-400 text-xs">
+              {showLegend ? '−' : '+'}
+            </span>
+          </button>
+          
+          {showLegend && (
+            <div className="px-3 pb-3">
+              <div className="space-y-1">
+                {currentRoutes.map((route, index) => (
+                  <div key={route.truck_id} className="flex items-center space-x-2">
                     <div 
-                      className="w-4 h-4 rounded-full"
+                      className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: truckColors[index % truckColors.length] }}
                     />
                     <span className="text-xs">🚛</span>
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-sm text-gray-700">
-                      Truck {route.truck_id}
-                    </span>
-                    <div className="text-xs text-gray-500">
-                      {route.stops.length} stops • Live tracking
+                    <div className="flex-1">
+                      <span className="text-xs text-gray-700 font-medium">
+                        {route.truck_id}
+                      </span>
+                      <span className="text-xs text-gray-500 ml-1">
+                        ({route.stops.length})
+                      </span>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg overflow-hidden max-w-xs">
+          <button
+            onClick={() => setShowLegend(!showLegend)}
+            className="w-full px-4 py-2 text-left hover:bg-gray-50 flex items-center justify-between"
+          >
+            <h4 className="font-medium text-gray-900">Route Legend</h4>
+            <span className="text-gray-400">
+              {showLegend ? '−' : '+'}
+            </span>
+          </button>
+          
+          {showLegend && (
+            <div className="px-4 pb-4">
+              <div className="space-y-2">
+                {currentRoutes.map((route, index) => (
+                  <div key={route.truck_id} className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
+                      <div 
+                        className="w-4 h-4 rounded-full"
+                        style={{ backgroundColor: truckColors[index % truckColors.length] }}
+                      />
+                      <span className="text-xs">🚛</span>
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm text-gray-700">
+                        Truck {route.truck_id}
+                      </span>
+                      <div className="text-xs text-gray-500">
+                        {route.stops.length} stops • Live tracking
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Note about geocoding if using mock coordinates */}
       {!hasRealCoordinates && (

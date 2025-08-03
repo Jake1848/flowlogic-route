@@ -300,7 +300,7 @@ Example:
             <Tabs defaultValue="summary" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="summary">Summary</TabsTrigger>
-                <TabsTrigger value="map">Map View</TabsTrigger>
+                <TabsTrigger value="map">🗺️ Fullscreen Map</TabsTrigger>
                 <TabsTrigger value="enterprise">Enterprise TMS</TabsTrigger>
               </TabsList>
               
@@ -308,9 +308,9 @@ Example:
                 <ResultsSummary routes={routes} routingSummary={""} />
               </TabsContent>
               
-              <TabsContent value="map" className="h-[calc(100vh-200px)]">
-                <div className="h-full">
-                  <RouteMap routes={routes} />
+              <TabsContent value="map" className="p-0 m-0">
+                <div className="fixed inset-0 z-50 bg-white">
+                  <RouteMap routes={routes} isFullscreen={true} />
                 </div>
               </TabsContent>
               
