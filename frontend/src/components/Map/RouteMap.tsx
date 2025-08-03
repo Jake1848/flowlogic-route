@@ -434,6 +434,15 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
     });
   }, [truckPositions, mapLoaded]);
 
+  // Log container details before render - moved before early returns
+  useEffect(() => {
+    console.log('🏗️ RouteMap container render details:', {
+      isFullscreen,
+      parentElement: mapContainerRef.current?.parentElement,
+      viewportSize: { width: window.innerWidth, height: window.innerHeight }
+    });
+  }, [isFullscreen]);
+
   if (!mapboxgl.accessToken) {
     return (
       <div className="h-full flex items-center justify-center bg-gray-50">
@@ -485,15 +494,6 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
     (route.depot_latitude && route.depot_longitude) || 
     route.stops.some(stop => stop.latitude && stop.longitude)
   );
-
-  // Log container details before render
-  useEffect(() => {
-    console.log('🏗️ RouteMap container render details:', {
-      isFullscreen,
-      parentElement: mapContainerRef.current?.parentElement,
-      viewportSize: { width: window.innerWidth, height: window.innerHeight }
-    });
-  }, [isFullscreen]); // Add dependency array
 
   return (
     <div 
