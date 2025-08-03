@@ -493,7 +493,7 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
       parentElement: mapContainerRef.current?.parentElement,
       viewportSize: { width: window.innerWidth, height: window.innerHeight }
     });
-  });
+  }, [isFullscreen]); // Add dependency array
 
   return (
     <div 
