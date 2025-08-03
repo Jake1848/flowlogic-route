@@ -297,19 +297,37 @@ Example:
               </Button>
             </div>
             
-            <Tabs defaultValue="summary" className="space-y-4">
+            <Tabs defaultValue="summary" className="space-y-4" onValueChange={(value) => {
+              console.log('🔄 Tab changed to:', value);
+              if (value === 'map') {
+                console.log('🗺️ MAP TAB SELECTED! Should show fullscreen map');
+                setTimeout(() => {
+                  console.log('🔍 Checking if map container exists:', !!document.querySelector('[data-testid="map-container"]'));
+                }, 100);
+              }
+            }}>
               <TabsList>
-                <TabsTrigger value="summary">Summary</TabsTrigger>
-                <TabsTrigger value="map">🗺️ Fullscreen Map</TabsTrigger>
-                <TabsTrigger value="enterprise">Enterprise TMS</TabsTrigger>
+                <TabsTrigger value="summary" onClick={() => console.log('📊 Summary tab clicked')}>Summary</TabsTrigger>
+                <TabsTrigger value="map" onClick={() => console.log('🗺️ Map tab clicked - about to show fullscreen')}>🗺️ Fullscreen Map</TabsTrigger>
+                <TabsTrigger value="enterprise" onClick={() => console.log('🏢 Enterprise tab clicked')}>Enterprise TMS</TabsTrigger>
               </TabsList>
               
               <TabsContent value="summary">
                 <ResultsSummary routes={routes} routingSummary={""} />
               </TabsContent>
               
-              <TabsContent value="map" className="p-0 m-0 relative">
-                <div className="fixed inset-0 z-[9999] bg-white" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}>
+              <TabsContent value="map" className="p-0 m-0 relative" data-testid="map-tab-content">
+                <div 
+                  className="fixed inset-0 z-[9999] bg-red-100" 
+                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
+                  onMouseEnter={() => console.log('🖱️ Map fullscreen container hovered - dimensions:', window.innerWidth, 'x', window.innerHeight)}
+                  data-testid="map-container"
+                >
+                  <div className="absolute top-10 left-10 bg-yellow-200 p-4 rounded z-50">
+                    <h2 className="font-bold">🔍 FULLSCREEN CONTAINER ACTIVE</h2>
+                    <p>This should cover the entire screen</p>
+                    <p>Viewport: {typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'loading...'}</p>
+                  </div>
                   <RouteMap routes={routes} isFullscreen={true} />
                 </div>
               </TabsContent>

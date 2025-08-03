@@ -15,6 +15,12 @@ interface RouteMapProps {
 }
 
 const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => {
+  console.log('🗺️ RouteMap component rendered with:', { 
+    routesCount: routes.length, 
+    isFullscreen,
+    timestamp: new Date().toISOString()
+  });
+
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -28,14 +34,19 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
 
   // Handle escape key to exit fullscreen
   useEffect(() => {
+    console.log('🔑 Escape key handler setup, isFullscreen:', isFullscreen);
     if (!isFullscreen) return;
 
     const handleEscape = (e: KeyboardEvent) => {
+      console.log('🔑 Key pressed:', e.key);
       if (e.key === 'Escape') {
+        console.log('🚪 ESC pressed - attempting to exit fullscreen');
         // Switch back to summary tab
         const summaryButton = document.querySelector('[data-value="summary"]') as HTMLButtonElement;
+        console.log('🎯 Summary button found:', !!summaryButton);
         if (summaryButton) {
           summaryButton.click();
+          console.log('✅ Summary button clicked');
         }
       }
     };
@@ -63,10 +74,17 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
   ];
 
   useEffect(() => {
-    console.log('Map initialization attempt:', {
+    console.log('🗺️ Map initialization attempt:', {
       container: !!mapContainerRef.current,
       token: !!mapboxgl.accessToken,
-      tokenValue: mapboxgl.accessToken ? 'Token set' : 'NO TOKEN'
+      tokenValue: mapboxgl.accessToken ? 'Token set' : 'NO TOKEN',
+      isFullscreen,
+      containerDimensions: mapContainerRef.current ? {
+        width: mapContainerRef.current.offsetWidth,
+        height: mapContainerRef.current.offsetHeight,
+        clientWidth: mapContainerRef.current.clientWidth,
+        clientHeight: mapContainerRef.current.clientHeight
+      } : null
     });
     
     if (!mapContainerRef.current || !mapboxgl.accessToken) {
@@ -76,7 +94,16 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
 
     try {
       // Initialize map with minimal config
-      console.log('Creating Mapbox GL map...');
+      console.log('🚀 Creating Mapbox GL map...');
+      console.log('📏 Container element details:', {
+        element: mapContainerRef.current,
+        computed: window.getComputedStyle(mapContainerRef.current),
+        position: window.getComputedStyle(mapContainerRef.current).position,
+        width: window.getComputedStyle(mapContainerRef.current).width,
+        height: window.getComputedStyle(mapContainerRef.current).height,
+        zIndex: window.getComputedStyle(mapContainerRef.current).zIndex
+      });
+
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: 'mapbox://styles/mapbox/streets-v11',
@@ -85,12 +112,24 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
         accessToken: mapboxgl.accessToken,
       });
       
-      console.log('Map instance created:', map);
+      console.log('✅ Map instance created:', map);
+      console.log('📐 Map container size after creation:', {
+        containerWidth: mapContainerRef.current.offsetWidth,
+        containerHeight: mapContainerRef.current.offsetHeight,
+        mapCanvas: map.getCanvas()?.width + 'x' + map.getCanvas()?.height
+      });
 
       mapRef.current = map;
 
       map.on('load', () => {
-        console.log('Map loaded successfully');
+        console.log('🎉 Map loaded successfully!');
+        console.log('📊 Final map dimensions:', {
+          mapSize: map.getContainer().getBoundingClientRect(),
+          canvasSize: map.getCanvas().getBoundingClientRect(),
+          containerParent: map.getContainer().parentElement?.getBoundingClientRect(),
+          viewportSize: { width: window.innerWidth, height: window.innerHeight },
+          isFullscreen
+        });
         setMapLoaded(true);
         
         // Add a simple test marker
@@ -98,9 +137,19 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
           const marker = new mapboxgl.Marker({ color: 'red' })
             .setLngLat([-84.3880, 33.7490])
             .addTo(map);
-          console.log('Test marker added:', marker);
+          console.log('🔴 Test marker added:', marker);
+          
+          // Force map resize to ensure it fills container
+          setTimeout(() => {
+            console.log('🔄 Forcing map resize...');
+            map.resize();
+            console.log('📏 Post-resize dimensions:', {
+              container: map.getContainer().getBoundingClientRect(),
+              canvas: map.getCanvas().getBoundingClientRect()
+            });
+          }, 100);
         } catch (err) {
-          console.error('Error adding marker:', err);
+          console.error('❌ Error adding marker:', err);
         }
       });
 
@@ -437,8 +486,21 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
     route.stops.some(stop => stop.latitude && stop.longitude)
   );
 
+  // Log container details before render
+  useEffect(() => {
+    console.log('🏗️ RouteMap container render details:', {
+      isFullscreen,
+      parentElement: mapContainerRef.current?.parentElement,
+      viewportSize: { width: window.innerWidth, height: window.innerHeight }
+    });
+  });
+
   return (
-    <div className="h-full relative bg-gray-100">
+    <div 
+      className={`h-full relative ${isFullscreen ? 'bg-gray-50' : 'bg-gray-100'}`}
+      style={isFullscreen ? { width: '100vw', height: '100vh' } : {}}
+      onMouseEnter={() => console.log('🎯 RouteMap main container hovered, isFullscreen:', isFullscreen)}
+    >
       {/* Loading overlay */}
       {!mapLoaded && !mapError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
@@ -453,27 +515,45 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes, isFullscreen = false }) => 
       <div 
         ref={mapContainerRef}
         className="w-full h-full"
-        style={{ minHeight: '400px', position: 'relative' }}
+        style={isFullscreen ? 
+          { width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0 } : 
+          { minHeight: '400px', position: 'relative' }
+        }
+        onMouseEnter={() => console.log('🗺️ Map container hovered, dimensions:', mapContainerRef.current?.getBoundingClientRect())}
       />
 
       {/* Map controls */}
       <div className="absolute top-4 right-4 flex flex-col space-y-2">
-        {/* Close button (fullscreen only) */}
-        {isFullscreen && (
-          <button
-            onClick={() => {
-              const summaryButton = document.querySelector('[data-value="summary"]') as HTMLButtonElement;
-              if (summaryButton) {
-                summaryButton.click();
-              }
-            }}
-            className="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg flex items-center space-x-2 transition-colors"
-            title="Exit Fullscreen (ESC)"
-          >
-            <span className="text-lg">✕</span>
-            <span className="text-sm font-medium">Close Map</span>
-          </button>
-        )}
+        {/* Debug info (temporary) */}
+      {isFullscreen && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-yellow-100 border-2 border-yellow-300 rounded-lg p-2 text-xs z-20">
+          <div className="font-bold text-yellow-800">🔍 DEBUG INFO</div>
+          <div>Fullscreen: {isFullscreen ? '✅' : '❌'}</div>
+          <div>Map Loaded: {mapLoaded ? '✅' : '❌'}</div>
+          <div>Viewport: {window.innerWidth}x{window.innerHeight}</div>
+          <div>Container: {mapContainerRef.current?.offsetWidth || 0}x{mapContainerRef.current?.offsetHeight || 0}</div>
+        </div>
+      )}
+
+      {/* Close button (fullscreen only) */}
+      {isFullscreen && (
+        <button
+          onClick={() => {
+            console.log('🚪 Close button clicked');
+            const summaryButton = document.querySelector('[data-value="summary"]') as HTMLButtonElement;
+            console.log('🎯 Summary button found:', !!summaryButton);
+            if (summaryButton) {
+              summaryButton.click();
+              console.log('✅ Summary button clicked');
+            }
+          }}
+          className="bg-white hover:bg-gray-100 text-gray-700 p-3 rounded-lg shadow-lg flex items-center space-x-2 transition-colors"
+          title="Exit Fullscreen (ESC)"
+        >
+          <span className="text-lg">✕</span>
+          <span className="text-sm font-medium">Close Map</span>
+        </button>
+      )}
 
         {/* Layer toggle */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
