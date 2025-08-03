@@ -274,40 +274,37 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
 
       currentRoutes.forEach(route => {
         if (route.stops.length > 0) {
-          // Simulate truck movement along route
-          const currentTime = new Date();
-          const startTime = new Date(route.stops[0].arrival_time);
-          const elapsedMinutes = Math.max(0, (currentTime.getTime() - startTime.getTime()) / (1000 * 60));
-          
-          // Calculate current position based on elapsed time
-          let totalTime = 0;
-          let currentStop = 0;
-          
-          for (let i = 0; i < route.stops.length; i++) {
-            const arrivalTime = new Date(route.stops[i].arrival_time);
-            const departureTime = new Date(route.stops[i].departure_time);
-            const stopTime = (departureTime.getTime() - arrivalTime.getTime()) / (1000 * 60);
+          try {
+            // Simple position simulation - just cycle through stops with time-based progression
+            const currentTime = Date.now();
+            const startTime = route.stops[0].arrival_time ? new Date(route.stops[0].arrival_time).getTime() : currentTime;
+            const elapsedMinutes = Math.max(0, (currentTime - startTime) / (1000 * 60));
             
-            if (elapsedMinutes <= totalTime + stopTime) {
-              currentStop = i;
-              break;
+            // Calculate which stop the truck should be at based on elapsed time
+            // Use a simple progression: 30 minutes per stop average
+            const stopIndex = Math.floor(elapsedMinutes / 30) % route.stops.length;
+            const stop = route.stops[stopIndex];
+            
+            if (stop && stop.latitude && stop.longitude) {
+              // Add small random offset to simulate movement around the stop area
+              const offset = 0.002;
+              newPositions[route.truck_id] = {
+                lat: stop.latitude + (Math.random() - 0.5) * offset,
+                lng: stop.longitude + (Math.random() - 0.5) * offset,
+                heading: Math.random() * 360
+              };
             }
-            totalTime += stopTime;
-            if (i < route.stops.length - 1) {
-              // Add travel time to next stop (estimate)
-              totalTime += 30; // 30 min average between stops
+          } catch (error) {
+            console.warn('Error in truck position simulation for truck', route.truck_id, error);
+            // Fallback to first stop position if available
+            const firstStop = route.stops[0];
+            if (firstStop && firstStop.latitude && firstStop.longitude) {
+              newPositions[route.truck_id] = {
+                lat: firstStop.latitude,
+                lng: firstStop.longitude,
+                heading: 0
+              };
             }
-          }
-          
-          const stop = route.stops[currentStop];
-          if (stop && stop.latitude && stop.longitude) {
-            // Add small random offset to simulate movement
-            const offset = 0.001;
-            newPositions[route.truck_id] = {
-              lat: stop.latitude + (Math.random() - 0.5) * offset,
-              lng: stop.longitude + (Math.random() - 0.5) * offset,
-              heading: Math.random() * 360
-            };
           }
         }
       });

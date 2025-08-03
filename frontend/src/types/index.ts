@@ -27,6 +27,8 @@ export interface Truck {
 export interface RouteStop {
   stop_id: number;
   eta: string;
+  arrival_time: string;
+  departure_time: string;
   distance_from_previous: number;
   notes: string;
   latitude?: number;
