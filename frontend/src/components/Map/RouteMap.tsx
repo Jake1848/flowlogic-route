@@ -52,8 +52,8 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
       const map = new mapboxgl.Map({
         container: mapContainerRef.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: [-98.5795, 39.8283], // Center of USA
-        zoom: 4,
+        center: [-84.3880, 33.7490], // Atlanta, GA (default)
+        zoom: 10,
       });
 
       mapRef.current = map;
@@ -67,6 +67,11 @@ const RouteMap: React.FC<RouteMapProps> = ({ routes }) => {
         
         // Add scale control
         map.addControl(new mapboxgl.ScaleControl(), 'bottom-right');
+        
+        // Add a test marker to ensure map is visible
+        new mapboxgl.Marker({ color: 'red' })
+          .setLngLat([-84.3880, 33.7490])
+          .addTo(map);
       });
 
       map.on('error', (e) => {
