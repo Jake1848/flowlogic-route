@@ -9,10 +9,12 @@ import EnterpriseIntegration from './Enterprise/EnterpriseIntegration';
 import { useRouting } from '../hooks/useRouting';
 import toast from 'react-hot-toast';
 import RouteMap from './Map/RouteMap';
+import FullscreenMapPortal from './Map/FullscreenMapPortal';
 import ResultsSummary from './Results/ResultsSummary';
 
 const SimplifiedApp: React.FC = () => {
   const [inputMethod, setInputMethod] = useState<'paste' | 'upload'>('paste');
+  const [showFullscreenMap, setShowFullscreenMap] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const {
@@ -297,38 +299,27 @@ Example:
               </Button>
             </div>
             
-            <Tabs defaultValue="summary" className="space-y-4" onValueChange={(value) => {
-              console.log('🔄 Tab changed to:', value);
-              if (value === 'map') {
-                console.log('🗺️ MAP TAB SELECTED! Should show fullscreen map');
-                setTimeout(() => {
-                  console.log('🔍 Checking if map container exists:', !!document.querySelector('[data-testid="map-container"]'));
-                }, 100);
-              }
-            }}>
+            <Tabs defaultValue="summary" className="space-y-4">
               <TabsList>
-                <TabsTrigger value="summary" onClick={() => console.log('📊 Summary tab clicked')}>Summary</TabsTrigger>
-                <TabsTrigger value="map" onClick={() => console.log('🗺️ Map tab clicked - about to show fullscreen')}>🗺️ Fullscreen Map</TabsTrigger>
-                <TabsTrigger value="enterprise" onClick={() => console.log('🏢 Enterprise tab clicked')}>Enterprise TMS</TabsTrigger>
+                <TabsTrigger value="summary">Summary</TabsTrigger>
+                <TabsTrigger value="enterprise">Enterprise TMS</TabsTrigger>
               </TabsList>
               
               <TabsContent value="summary">
                 <ResultsSummary routes={routes} routingSummary={""} />
-              </TabsContent>
-              
-              <TabsContent value="map" className="p-0 m-0 relative" data-testid="map-tab-content">
-                <div 
-                  className="fixed inset-0 z-[9999] bg-red-100" 
-                  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, width: '100vw', height: '100vh' }}
-                  onMouseEnter={() => console.log('🖱️ Map fullscreen container hovered - dimensions:', window.innerWidth, 'x', window.innerHeight)}
-                  data-testid="map-container"
-                >
-                  <div className="absolute top-10 left-10 bg-yellow-200 p-4 rounded z-50">
-                    <h2 className="font-bold">🔍 FULLSCREEN CONTAINER ACTIVE</h2>
-                    <p>This should cover the entire screen</p>
-                    <p>Viewport: {typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'loading...'}</p>
-                  </div>
-                  <RouteMap routes={routes} isFullscreen={true} />
+                {/* Fullscreen Map Button */}
+                <div className="mt-6">
+                  <Button
+                    onClick={() => setShowFullscreenMap(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={routes.length === 0}
+                  >
+                    <span className="mr-2">🗺️</span>
+                    Open Fullscreen Map
+                  </Button>
+                  {routes.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-2">Generate routes first to view the map</p>
+                  )}
                 </div>
               </TabsContent>
               
@@ -342,6 +333,14 @@ Example:
               </TabsContent>
             </Tabs>
           </div>
+        )}
+        
+        {/* Fullscreen Map Portal */}
+        {showFullscreenMap && (
+          <FullscreenMapPortal 
+            routes={routes} 
+            onClose={() => setShowFullscreenMap(false)} 
+          />
         )}
       </main>
     </div>

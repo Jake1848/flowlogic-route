@@ -48,6 +48,10 @@ routing_engine = RoutingEngine()
 nlp_processor = NaturalLanguageProcessor()
 fleet_generator = FleetGenerator()
 
+# Include GPS tracking routes
+from app.gps_routes import router as gps_router
+app.include_router(gps_router)
+
 
 # Request models for new endpoints
 class AutoRoutingRequest(BaseModel):
